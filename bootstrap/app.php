@@ -3,9 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Http\Request;
-use Illuminate\Auth\AuthenticationException;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\CheckAdminAccess;
 
@@ -21,42 +18,17 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified' => EnsureEmailIsVerified::class,
             'admin.access' => CheckAdminAccess::class,
         ]);
-        
-        $middleware->web([
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
-        
-        // ✅ Убираем throttle:api
+
+        // API middleware - без stateful и CSRF для Bearer-only auth
         $middleware->api([
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            // 'throttle:api',  // ❌ ЗАКОММЕНТИРОВАНО
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
-        
-        $middleware->statefulApi();
-        
+
         // Отключаем CSRF для API
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
     })
-    ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('events:unpublish-past')
-            ->dailyAt('00:05')
-            ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/events-unpublish.log'));
-    })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
-            
-            return redirect()->guest('/admin/login');
-        });
+        // ...
     })->create();

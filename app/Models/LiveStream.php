@@ -13,6 +13,7 @@ class LiveStream extends Model
         'title',
         'platform',
         'embed_url',
+        'stream_id',      // ✅ Добавляем stream_id
         'is_active',
         'scheduled_start',
         'scheduled_end',
@@ -31,19 +32,29 @@ class LiveStream extends Model
             if (empty($liveStream->title)) {
                 $liveStream->title = 'Трансляция ' . now()->format('d.m.Y');
             }
+            
+            // ✅ Автоматически извлекаем stream_id из embed_url
+            if (empty($liveStream->stream_id) && $liveStream->embed_url) {
+                $liveStream->stream_id = $liveStream->getStreamIdFromUrl();
+            }
+        });
+        
+        // ✅ Обновляем stream_id при сохранении
+        static::saving(function ($liveStream) {
+            if ($liveStream->isDirty('embed_url') && $liveStream->embed_url) {
+                $liveStream->stream_id = $liveStream->getStreamIdFromUrl();
+            }
         });
     }
     
-    // Парсим embed_url и возвращаем ID для плеера
-    public function getStreamIdAttribute()
+    // ✅ Извлекаем ID из embed_url
+    public function getStreamIdFromUrl()
     {
         if (!$this->embed_url) return null;
         
         // Для Rutube
         if (str_contains($this->embed_url, 'rutube.ru')) {
-            // https://rutube.ru/play/embed/ID
-            // https://rutube.ru/video/ID/
-            preg_match('/(?:embed\/|video\/)([a-zA-Z0-9]+)/', $this->embed_url, $matches);
+            preg_match('/(?:embed\/|video\/)([a-f0-9]+)/', $this->embed_url, $matches);
             return $matches[1] ?? null;
         }
         
@@ -59,7 +70,22 @@ class LiveStream extends Model
             return $matches[1] ?? null;
         }
         
-        return $this->embed_url;
+        return null;
+    }
+    
+    // ✅ Аксессор для получения ID
+    public function getStreamIdAttribute()
+    {
+        if ($this->attributes['stream_id'] ?? false) {
+            return $this->attributes['stream_id'];
+        }
+        return $this->getStreamIdFromUrl();
+    }
+    
+    // ✅ Мутатор для установки stream_id
+    public function setStreamIdAttribute($value)
+    {
+        $this->attributes['stream_id'] = $value;
     }
     
     public function scopeActive($query)

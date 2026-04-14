@@ -18,10 +18,6 @@ return [
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
-        'login',
-        'logout',
-        'register',
-        'broadcasting/auth',
     ],
 
 
@@ -39,8 +35,8 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 3600,
+    'max_age' => 0,
 
-    'supports_credentials' => true, // Для токенов не нужны куки
+    'supports_credentials' => false, // Для токенов не нужны куки
 
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use App\Models\UserConsent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +20,7 @@ class AuthController extends Controller
     {
         try {
             Log::info('Login attempt', ['email' => $request->email]);
-            
+
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required|string',
@@ -27,53 +28,30 @@ class AuthController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Ошибка валидации',
                     'errors' => $validator->errors()
                 ], 422);
             }
 
-            // Ищем пользователя вручную (без Auth::attempt)
             $user = User::where('email', $request->email)->first();
-            
-            if (!$user) {
-                Log::warning('User not found', ['email' => $request->email]);
+
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                Log::warning('Invalid login attempt', ['email' => $request->email]);
                 return response()->json([
+                    'success' => false,
                     'message' => 'Неверные email или пароль'
                 ], 401);
             }
-            
-            // Проверяем пароль
-            if (!Hash::check($request->password, $user->password)) {
-                Log::warning('Invalid password', ['email' => $request->email]);
-                return response()->json([
-                    'message' => 'Неверные email или пароль'
-                ], 401);
-            }
-            
+
             // Удаляем старые токены
             $user->tokens()->delete();
-            
+
             // Создаем новый токен
-            $token = $user->createToken('auth-token')->plainTextToken;
-            
-            // Получаем роли пользователя
-            $roles = [];
-            if (method_exists($user, 'roles')) {
-                $roles = $user->roles->pluck('name')->toArray();
-            }
-            
-            // Проверяем доступ к админке
-            $canAccessAdmin = false;
-            foreach ($roles as $role) {
-                if ($role !== 'user') {
-                    $canAccessAdmin = true;
-                    break;
-                }
-            }
-            
-            Log::info('Login successful', ['user_id' => $user->id]);
-            
+            $token = $user->createToken('auth_token')->plainTextToken;
+
             return response()->json([
+                'success' => true,
                 'token' => $token,
                 'token_type' => 'Bearer',
                 'user' => [
@@ -82,6 +60,7 @@ class AuthController extends Controller
                     'last_name' => $user->last_name,
                     'middle_name' => $user->middle_name,
                     'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
                     'phone' => $user->phone,
                     'city' => $user->city,
                     'church_name' => $user->church_name,
@@ -89,19 +68,15 @@ class AuthController extends Controller
                     'birth_date' => $user->birth_date,
                     'avatar' => $user->avatar,
                     'created_at' => $user->created_at,
-                    'email_verified_at' => $user->email_verified_at,
                 ],
-                'roles' => $roles,
-                'can_access_admin' => $canAccessAdmin,
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'can_access_admin' => $user->canAccessAdmin(),
             ]);
-            
+
         } catch (\Exception $e) {
-            Log::error('Login error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
+            Log::error('Login error: ' . $e->getMessage());
             return response()->json([
+                'success' => false,
                 'message' => 'Ошибка при входе в систему'
             ], 500);
         }
@@ -116,13 +91,14 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'privacy_accepted' => 'required|accepted',
             'registration_source' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
+                'success' => false,
                 'message' => 'Ошибка валидации',
                 'errors' => $validator->errors()
             ], 422);
@@ -136,37 +112,21 @@ class AuthController extends Controller
             'registration_source' => $request->registration_source ?? 'wotnt.ru',
         ]);
 
-        // Назначаем роль 'user' по умолчанию
-        if (method_exists($user, 'assignRole')) {
-            $user->assignRole('user');
-        }
-
-        // Отправляем письмо с подтверждением email
+        // ✅ НЕ выдаём токен, только отправляем письмо
         event(new Registered($user));
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-
         return response()->json([
-            'message' => 'Регистрация успешна. Пожалуйста, подтвердите email.',
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-                'created_at' => $user->created_at,
-                'email_verified_at' => $user->email_verified_at,
-            ],
-            'roles' => ['user'],
-            'can_access_admin' => false,
+            'success' => true,
+            'message' => 'Регистрация успешна. Пожалуйста, подтвердите email, перейдя по ссылке в письме.',
             'requires_verification' => true,
+            // ❌ НЕТ token, user, roles
         ], 201);
 
     } catch (\Exception $e) {
         Log::error('Registration error: ' . $e->getMessage());
         return response()->json([
-            'message' => 'Ошибка при регистрации: ' . $e->getMessage()
+            'success' => false,
+            'message' => 'Ошибка при регистрации'
         ], 500);
     }
 }
@@ -178,35 +138,23 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             if (!$user) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
             }
-            
-            // Загружаем роли
-            if (method_exists($user, 'roles')) {
-                $user->load('roles');
-                $roles = $user->roles->pluck('name')->toArray();
-            } else {
-                $roles = ['user'];
-            }
-            
-            // Проверяем доступ к админке
-            $canAccessAdmin = false;
-            foreach ($roles as $role) {
-                if ($role !== 'user') {
-                    $canAccessAdmin = true;
-                    break;
-                }
-            }
-            
+
             return response()->json([
+                'success' => true,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'last_name' => $user->last_name,
                     'middle_name' => $user->middle_name,
                     'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
                     'phone' => $user->phone,
                     'city' => $user->city,
                     'church_name' => $user->church_name,
@@ -215,35 +163,15 @@ class AuthController extends Controller
                     'avatar' => $user->avatar,
                     'created_at' => $user->created_at,
                 ],
-                'roles' => $roles,
-                'can_access_admin' => $canAccessAdmin,
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'can_access_admin' => $user->canAccessAdmin(),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Get user error: ' . $e->getMessage());
-            return response()->json(['message' => 'Error loading user'], 500);
-        }
-    }
-
-    /**
-     * Выход пользователя
-     */
-    public function logout(Request $request)
-    {
-        try {
-            $user = $request->user();
-            if ($user && method_exists($user, 'currentAccessToken')) {
-                $user->currentAccessToken()->delete();
-            }
-            
             return response()->json([
-                'message' => 'Выход выполнен успешно'
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('Logout error: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Ошибка при выходе'
+                'success' => false,
+                'message' => 'Ошибка загрузки пользователя'
             ], 500);
         }
     }
@@ -255,9 +183,12 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             if (!$user) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
             }
 
             $validator = Validator::make($request->all(), [
@@ -270,21 +201,32 @@ class AuthController extends Controller
                 'church_name' => 'nullable|string|max:255',
                 'about' => 'nullable|string',
                 'birth_date' => 'nullable|date',
-                'new_password' => 'nullable|min:6|confirmed',
+                'current_password' => 'required_with:new_password|current_password',
+                'new_password' => 'nullable|string|min:8|confirmed',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Ошибка валидации',
                     'errors' => $validator->errors()
                 ], 422);
             }
 
-            // Обновляем основные данные
+            $oldEmail = $user->email;
+            $emailChanged = false;
+
+            // Обновляем основные поля
             $user->fill($request->only([
-                'name', 'last_name', 'middle_name', 'email',
-                'phone', 'city', 'church_name', 'about', 'birth_date'
+                'name', 'last_name', 'middle_name', 'phone', 'city', 'church_name', 'about', 'birth_date'
             ]));
+
+            // Обновляем email, если изменился
+            if ($request->filled('email') && $request->email !== $user->email) {
+                $user->email = $request->email;
+                $user->email_verified_at = null;
+                $emailChanged = true;
+            }
 
             // Обновляем пароль, если указан
             if ($request->filled('new_password')) {
@@ -293,7 +235,13 @@ class AuthController extends Controller
 
             $user->save();
 
+            // Отправляем новое письмо подтверждения, если email изменен
+            if ($emailChanged) {
+                $user->sendEmailVerificationNotification();
+            }
+
             return response()->json([
+                'success' => true,
                 'message' => 'Профиль успешно обновлен',
                 'user' => [
                     'id' => $user->id,
@@ -301,6 +249,7 @@ class AuthController extends Controller
                     'last_name' => $user->last_name,
                     'middle_name' => $user->middle_name,
                     'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
                     'phone' => $user->phone,
                     'city' => $user->city,
                     'church_name' => $user->church_name,
@@ -308,27 +257,121 @@ class AuthController extends Controller
                     'birth_date' => $user->birth_date,
                     'avatar' => $user->avatar,
                 ],
+                'email_verification_required' => $emailChanged,
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('Update profile error: ' . $e->getMessage());
-            return response()->json(['message' => 'Error updating profile'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка обновления профиля'
+            ], 500);
         }
     }
 
     /**
-     * Обновление согласия (заглушка)
+     * Выход пользователя
      */
-    public function updateConsent(Request $request)
+    public function logout(Request $request)
     {
-        return response()->json(['message' => 'Not implemented'], 501);
+        try {
+            $user = $request->user();
+            
+            if ($user && method_exists($user, 'currentAccessToken')) {
+                $user->currentAccessToken()->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Выход выполнен успешно'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Logout error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при выходе'
+            ], 500);
+        }
     }
 
-    /**
-     * История согласий (заглушка)
-     */
-    public function consentHistory(Request $request)
-    {
-        return response()->json(['consents' => []]);
+/**
+ * Обновление согласия на обработку персональных данных
+ */
+public function updateConsent(Request $request)
+{
+    try {
+        $user = $request->user();
+        
+        $validator = Validator::make($request->all(), [
+            'policy_version' => 'required|string',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка валидации',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Сохраняем согласие
+        $consent = UserConsent::create([
+            'user_id' => $user->id,
+            'consent_type' => 'privacy_policy',
+            'policy_version' => $request->policy_version,
+            'ip_address' => $request->ip(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Согласие успешно обновлено',
+            'consent' => [
+                'date' => $consent->created_at->format('d.m.Y H:i:s'),
+                'version' => $consent->policy_version,
+                'ip' => $consent->ip_address,
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Update consent error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка обновления согласия'
+        ], 500);
     }
+}
+
+/**
+ * История согласий пользователя
+ */
+public function consentHistory(Request $request)
+{
+    try {
+        $user = $request->user();
+        
+        $consents = UserConsent::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($consent) {
+                return [
+                    'date' => $consent->created_at->format('d.m.Y H:i:s'),
+                    'version' => $consent->policy_version,
+                    'ip' => $consent->ip_address,
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'consents' => $consents,
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Consent history error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'consents' => []
+        ], 500);
+    }
+}
 }

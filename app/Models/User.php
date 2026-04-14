@@ -12,7 +12,6 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-//use App\Notifications\CustomVerifyEmailNotification;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\CustomVerifyEmail; 
 
@@ -68,30 +67,53 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     
     /**
      * Определяет, может ли пользователь получить доступ к панели Filament
+     * Для Filament 4 сигнатура: canAccessPanel(Panel $panel): bool
      */
     public function canAccessPanel(Panel $panel): bool
     {
         // Для админ-панели
         if ($panel->getId() === 'admin') {
-            // Перебираем все роли пользователя
-            foreach ($this->roles as $role) {
-                // Если нашли роль, отличную от 'user' — разрешаем доступ
-                if ($role->name !== 'user') {
-                    return true;
-                }
-            }
-            // Если все роли — только 'user', то доступ запрещен
-            return false;
+            return $this->canAccessAdmin();
         }
-    
+        
         // Для пользовательской панели доступ разрешен всем
         if ($panel->getId() === 'user') {
             return true;
         }
-    
+        
         // Для всех остальных панелей - запрещаем
         return false;
     }
+    
+    /**
+     * Проверка доступа к админ-панели (только admin и super_admin)
+     */
+    public function canAccessAdmin(): bool
+    {
+        return $this->hasAnyRole(['admin', 'super_admin']);
+    }
+
+    /**
+     * Проверка, является ли пользователь администратором (любая роль кроме user)
+     */
+    public function isAnyAdmin(): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->name !== 'user') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Проверка, имеет ли пользователь одну из указанных ролей
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()->whereIn('name', $roles)->exists();
+    }
+
     
     /**
      * Booted model events
@@ -232,18 +254,23 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     }
     
     /**
-     * Получить URL аватара
-     */
-    public function getAvatarUrlAttribute(): ?string
-    {
-        if ($this->avatar) {
-            return asset('storage/' . $this->avatar);
+ * Получить URL аватара
+ */
+public function getAvatarUrlAttribute(): ?string
+{
+    if ($this->avatar) {
+        // Если аватар на S3
+        if (str_starts_with($this->avatar, 'avatars/')) {
+            return 'https://storage.yandexcloud.net/wotgospel-media/' . $this->avatar;
         }
-        
-        // Генерируем аватар на основе имени через ui-avatars
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name ?? 'User') . 
-               '&background=10b981&color=fff&bold=true&size=128';
+        // Если аватар локально
+        return asset('storage/' . $this->avatar);
     }
+    
+    // Генерируем аватар на основе имени через ui-avatars
+    return 'https://ui-avatars.com/api/?name=' . urlencode($this->name ?? 'User') . 
+           '&background=10b981&color=fff&bold=true&size=128';
+}
     
     /**
      * Отформатированный номер телефона (если хранится в цифрах)

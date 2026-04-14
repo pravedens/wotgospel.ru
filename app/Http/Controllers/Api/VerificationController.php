@@ -15,68 +15,47 @@ class VerificationController extends Controller
      * Обработка верификации email через подписанную ссылку
      */
     public function verify(Request $request, $id, $hash)
-    {
-        // Находим пользователя по ID из URL
-        $user = User::find($id);
-
-        // Проверяем, существует ли пользователь
-        if (!$user) {
-            return redirect()->away($this->getRedirectUrl('error', 'Пользователь не найден'));
-        }
-
-        // Проверяем, не верифицирован ли уже email
-        if ($user->hasVerifiedEmail()) {
-            return redirect()->away($this->getRedirectUrl('info', 'Email уже подтвержден', $user->registration_source));
-        }
-
-        // Проверяем валидность подписи и хеша
-        if (!$request->hasValidSignature()) {
-            return redirect()->away($this->getRedirectUrl('error', 'Недействительная или истекшая ссылка', $user->registration_source));
-        }
-
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return redirect()->away($this->getRedirectUrl('error', 'Недействительная ссылка', $user->registration_source));
-        }
-
-        // Подтверждаем email
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-            Log::info('User verified email', ['user_id' => $user->id, 'email' => $user->email]);
-        }
-
-        // Определяем источник из модели пользователя
-        $source = $user->registration_source ?? config('app.frontend_url', 'https://wotnt.ru');
-
-        return redirect()->away($this->getRedirectUrl('success', 'Email успешно подтвержден', $source));
+{
+    $user = User::findOrFail($id);
+    
+    if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        return redirect()->away('https://wotnt.ru/auth/login?verified=0&error=invalid');
     }
+    
+    if ($user->hasVerifiedEmail()) {
+        return redirect()->away('https://wotnt.ru/auth/login?verified=already');
+    }
+    
+    $user->markEmailAsVerified();
+    
+    // ✅ Редирект на страницу логина с сообщением об успехе
+    return redirect()->away('https://wotnt.ru/auth/login?verified=1');
+}
 
     /**
-     * Отправка повторного письма
-     */
-    public function resend(Request $request)
-    {
-        $user = $request->user();
-        
-        if (!$user) {
-            return response()->json([
-                'message' => 'Пользователь не авторизован'
-            ], 401);
+ * Повторная отправка письма с подтверждением
+ */
+public function resend(Request $request)
+{
+    // Если есть email в запросе (неавторизованный пользователь)
+    if ($request->has('email')) {
+        $user = User::where('email', $request->email)->first();
+        if ($user && !$user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+            return response()->json(['message' => 'Письмо отправлено']);
         }
-
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Email уже подтвержден'
-            ], 400);
-        }
-
-        $user->sendEmailVerificationNotification();
-        
-        Log::info('Verification email resent', ['user_id' => $user->id, 'email' => $user->email]);
-
-        return response()->json([
-            'message' => 'Письмо отправлено повторно'
-        ]);
+        return response()->json(['message' => 'Пользователь не найден или уже подтверждён'], 404);
     }
+    
+    // Авторизованный пользователь
+    $user = $request->user();
+    if ($user->hasVerifiedEmail()) {
+        return response()->json(['message' => 'Email уже подтверждён'], 400);
+    }
+    
+    $user->sendEmailVerificationNotification();
+    return response()->json(['message' => 'Письмо отправлено']);
+}
 
     /**
      * Вспомогательный метод для формирования URL редиректа

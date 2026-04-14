@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Resources;
+
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
@@ -164,7 +165,14 @@ class EventResource extends Resource
                 ->columnSpanFull(),
                 
             Toggle::make('members_only')
-                ->label('Только для членов церкви')
+                ->label('🔒 Только для членов церкви')
+                ->visible(fn () => auth()->user()->hasRole(['admin', 'super_admin']))
+                ->default(false),
+                
+            // ✅ ДОБАВЛЯЕМ ЧЕКБОКС ДЛЯ СЛУЖИТЕЛЕЙ
+            Toggle::make('ministers_only')
+                ->label('👔 Только для служителей')
+                ->helperText('Если включено, событие увидят только пользователи с ролью "minister"')
                 ->visible(fn () => auth()->user()->hasRole(['admin', 'super_admin']))
                 ->default(false),
         ]);
@@ -211,6 +219,14 @@ class EventResource extends Resource
                     ->falseIcon('heroicon-o-lock-open')
                     ->trueColor('warning')
                     ->falseColor('gray'),
+                // ✅ ДОБАВЛЯЕМ КОЛОНКУ ДЛЯ СЛУЖИТЕЛЕЙ
+                IconColumn::make('ministers_only')
+                    ->label('Только служители')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-shield-check')
+                    ->falseIcon('heroicon-o-shield-exclamation')
+                    ->trueColor('purple')
+                    ->falseColor('gray'),
             ])
             ->filters([
                 Filter::make('upcoming')
@@ -232,6 +248,13 @@ class EventResource extends Resource
                     
                 TernaryFilter::make('members_only')
                     ->label('Только для членов'),
+                    
+                // ✅ ДОБАВЛЯЕМ ФИЛЬТР ДЛЯ СЛУЖИТЕЛЕЙ
+                TernaryFilter::make('ministers_only')
+                    ->label('Только для служителей')
+                    ->placeholder('Все события')
+                    ->trueLabel('Только для служителей')
+                    ->falseLabel('Не для служителей'),
             ])
             ->actions([
                 EditAction::make(),

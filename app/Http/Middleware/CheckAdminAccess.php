@@ -10,31 +10,21 @@ class CheckAdminAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Если пользователь не авторизован - пропускаем дальше
-        if (!auth()->check()) {
-            return $next($request);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated'
+            ], 401);
         }
 
-        $user = auth()->user();
-        
-        // Проверяем роль через Spatie Permission
-        $hasAdminAccess = false;
-        
-        if (method_exists($user, 'hasRole')) {
-            $hasAdminAccess = $user->hasRole('admin') || $user->hasRole('super_admin');
-        }
-        
-        // Если нет прав доступа
-        if (!$hasAdminAccess) {
-            // Разлогиниваем
-            auth()->logout();
-            
-            // Очищаем сессию
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-            
-            // Редирект на главный сайт
-            return redirect()->to('https://wotnt.ru')->with('error', 'У вас нет прав для доступа к панели администратора');
+        // Используем единый метод проверки
+        if (!$user->canAccessAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Недостаточно прав доступа'
+            ], 403);
         }
 
         return $next($request);

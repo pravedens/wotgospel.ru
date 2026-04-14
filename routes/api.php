@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\BibleController;
 use App\Http\Controllers\Api\ContactsController;
 use App\Http\Controllers\Api\LiveStreamController;
+use App\Http\Controllers\Api\PastorUserController;
 
 // ============================================
 // ПРОКСИ МАРШРУТ - САМЫЙ ПЕРВЫЙ
@@ -29,11 +30,6 @@ use App\Http\Controllers\Api\LiveStreamController;
 Route::get('/doc-view/{path}', [DocumentProxyController::class, 'show'])
     ->where('path', '.*')
     ->name('doc.viewer');
-
-// ТЕСТОВЫЙ МАРШРУТ
-Route::get('/test-proxy', function() {
-    return response()->json(['message' => 'Proxy test works']);
-});
 
 // ============================================
 // СОБЫТИЯ
@@ -59,7 +55,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // Админские маршруты для работы с сообщениями (только для админов)
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'admin.access'])->prefix('admin')->group(function () {
     Route::get('/contacts', [ContactsController::class, 'index']);
     Route::get('/contacts/{id}', [ContactsController::class, 'show']);
     Route::put('/contacts/{id}/read', [ContactsController::class, 'markAsRead']);
@@ -99,8 +95,9 @@ Route::prefix('bible')->group(function () {
     Route::get('/verse-of-the-day', [BibleController::class, 'verseOfTheDay']);
     Route::get('/', [BibleController::class, 'index']);
     Route::get('/{slug}', [BibleController::class, 'show']);
-    Route::post('/clear-cache', [BibleController::class, 'clearCache'])->middleware('auth:sanctum'); // только для админов
+    Route::post('/clear-cache', [BibleController::class, 'clearCache'])->middleware(['auth:sanctum', 'admin.access']);
 });
+
 
 // ============================================
 // ВЕРИФИКАЦИЯ EMAIL
@@ -133,6 +130,14 @@ Route::get('/denominations/{slug}/abouts', [AboutController::class, 'byDenominat
 // ============================================
 Route::get('/denominations', [DenominationController::class, 'index']);
 Route::get('/denominations/{slug}', [DenominationController::class, 'show']);
+
+// Маршруты для пастора (управление пользователями)
+Route::middleware(['auth:sanctum'])->prefix('pastor')->group(function () {
+    Route::get('/users', [PastorUserController::class, 'index']);
+    Route::get('/users/export', [PastorUserController::class, 'export']);
+    Route::get('/users/{userId}', [PastorUserController::class, 'show']);
+    Route::put('/users/{userId}/roles', [PastorUserController::class, 'updateRoles']);
+});
 
 // ============================================
 // ЗАЩИЩЕННЫЕ МАРШРУТЫ (ТРЕБУЕТСЯ АВТОРИЗАЦИЯ И ПОДТВЕРЖДЕНИЕ EMAIL)

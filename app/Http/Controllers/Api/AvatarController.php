@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AvatarController extends Controller
 {
     /**
-     * Загрузка аватара пользователя
+     * Загрузка аватара пользователя на S3
      */
     public function upload(Request $request)
     {
@@ -20,6 +21,7 @@ class AvatarController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'success' => false,
                 'message' => 'Ошибка валидации',
                 'errors' => $validator->errors()
             ], 422);
@@ -29,37 +31,46 @@ class AvatarController extends Controller
 
         // Удаляем старый аватар, если есть
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            Storage::disk('s3')->delete($user->avatar);
         }
 
-        // Сохраняем новый аватар
-        $path = $request->file('avatar')->store('avatars', 'public');
+        // Генерируем уникальное имя файла
+        $file = $request->file('avatar');
+        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
+
+        // Сохраняем на S3
+        $path = Storage::disk('s3')->put($filename, file_get_contents($file), 'public');
 
         // Обновляем пользователя
-        $user->avatar = $path;
+        $user->avatar = $filename;
         $user->save();
 
+        // Формируем URL для доступа к аватару
+        $avatarUrl = Storage::disk('s3')->url($filename);
+
         return response()->json([
+            'success' => true,
             'message' => 'Аватар успешно загружен',
-            'avatar' => $path,
-            'avatar_url' => asset('storage/' . $path)
+            'avatar' => $filename,
+            'avatar_url' => $avatarUrl
         ]);
     }
 
     /**
-     * Удаление аватара
+     * Удаление аватара с S3
      */
     public function destroy(Request $request)
     {
         $user = $request->user();
 
         if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
+            Storage::disk('s3')->delete($user->avatar);
             $user->avatar = null;
             $user->save();
         }
 
         return response()->json([
+            'success' => true,
             'message' => 'Аватар удален'
         ]);
     }
@@ -71,9 +82,15 @@ class AvatarController extends Controller
     {
         $user = $request->user();
 
+        $avatarUrl = null;
+        if ($user->avatar) {
+            $avatarUrl = Storage::disk('s3')->url($user->avatar);
+        }
+
         return response()->json([
+            'success' => true,
             'avatar' => $user->avatar,
-            'avatar_url' => $user->avatar ? asset('storage/' . $user->avatar) : null
+            'avatar_url' => $avatarUrl
         ]);
     }
 }
