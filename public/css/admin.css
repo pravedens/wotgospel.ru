@@ -1,0 +1,31 @@
+/* Переопределяем сетку с правильным селектором */
+@media (min-width: 64rem) {
+    .fi-grid:not(.fi-grid-direction-col).lg\:fi-grid-cols {
+        --cols-lg: repeat(6, minmax(0, 1fr)) !important;
+        grid-template-columns: var(--cols-lg) !important;
+    }
+}
+
+/* На средних экранах */
+@media (max-width: 1279px) and (min-width: 1024px) {
+    .fi-grid:not(.fi-grid-direction-col).lg\:fi-grid-cols {
+        --cols-lg: repeat(4, minmax(0, 1fr)) !important;
+        grid-template-columns: var(--cols-lg) !important;
+    }
+}
+
+/* Поля на всю ширину */
+[data-field-key="call_question"],
+[data-field-key="content"],
+[data-field-key="practice_task"],
+[data-field-key="scripture_verse_ids"] {
+    grid-column: span 6 / span 6 !important;
+}
+
+/* Контейнер на всю ширину */
+.fi-main-ctn {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}

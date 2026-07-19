@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Resources;
+
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
@@ -8,6 +9,7 @@ use Filament\Actions\DeleteBulkAction;
 
 use App\Filament\Resources\AboutResource\Pages;
 use App\Models\About;
+use App\Services\ImageOptimizer;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
@@ -21,6 +23,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use BackedEnum;
 use UnitEnum;
@@ -31,7 +35,7 @@ class AboutResource extends Resource
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static UnitEnum|string|null $navigationGroup = null;
+    protected static UnitEnum|string|null $navigationGroup = 'О нас';
 
     protected static ?string $navigationLabel = 'Статьи';
 
@@ -83,14 +87,49 @@ class AboutResource extends Resource
                     ->relationship('denomination', 'title')
                     ->required(),
 
+                // ✅ Загрузка на S3 (Яндекс Облако) с оптимизацией
                 FileUpload::make('thumbnail')
                     ->label('Картинка')
                     ->image()
-                    ->directory('abouts')
-                    ->disk('public')
+                    ->directory('abouts/thumbnails')
+                    ->disk('s3')
                     ->visibility('public')
                     ->imageEditor()
                     ->maxSize(5120)
+                    ->saveUploadedFileUsing(function (UploadedFile $file, ?Model $record): string {
+                        // Оптимизируем и сохраняем изображение в S3
+                        $optimizedPath = ImageOptimizer::optimizeAndStore(
+                            file: $file,
+                            directory: 'abouts/thumbnails',
+                            width: 1200,
+                            height: 800,
+                            quality: 85
+                        );
+                        
+                        if ($optimizedPath) {
+                            // Если есть старый файл — удаляем его
+                            if ($record && $record->thumbnail) {
+                                Storage::disk('s3')->delete($record->thumbnail);
+                                \Log::info('Old thumbnail deleted on update', ['path' => $record->thumbnail]);
+                            }
+                            return $optimizedPath;
+                        }
+                        
+                        // Fallback: сохраняем оригинал
+                        \Log::warning('Image optimization failed in Filament, using original', [
+                            'original_name' => $file->getClientOriginalName(),
+                            'original_size' => $file->getSize()
+                        ]);
+                        
+                        $filename = Str::slug($record?->title ?? 'about') . '-' . uniqid() . '.webp';
+                        return $file->storeAs('abouts/thumbnails', $filename, 's3');
+                    })
+                    ->deleteUploadedFileUsing(function ($file, $record) {
+                        if ($record && $record->thumbnail) {
+                            Storage::disk('s3')->delete($record->thumbnail);
+                            \Log::info('Thumbnail deleted via deleteUploadedFileUsing', ['path' => $record->thumbnail]);
+                        }
+                    })
                     ->columnSpanFull(),
             ]);
     }
@@ -100,7 +139,7 @@ class AboutResource extends Resource
         return $table
             ->columns([
                 ImageColumn::make('thumbnail')
-                    ->disk('public')
+                    ->disk('s3')  // ✅ Используем S3
                     ->size(80)
                     ->circular(),
 
@@ -119,7 +158,20 @@ class AboutResource extends Resource
             ->defaultSort('title', 'asc')
             ->actions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->action(function (About $record) {
+                        // ✅ Удаляем thumbnail из S3
+                        if ($record->thumbnail) {
+                            Storage::disk('s3')->delete($record->thumbnail);
+                            \Log::info('Thumbnail deleted on record delete', ['path' => $record->thumbnail]);
+                        }
+                        $record->delete();
+                        
+                        Notification::make()
+                            ->title('Статья удалена')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -127,11 +179,12 @@ class AboutResource extends Resource
                         ->action(function (Collection $records) {
                             foreach ($records as $record) {
                                 if ($record->thumbnail) {
-                                    Storage::disk('public')->delete($record->thumbnail);
+                                    Storage::disk('s3')->delete($record->thumbnail);
+                                    \Log::info('Thumbnail deleted on bulk delete', ['path' => $record->thumbnail]);
                                 }
                                 $record->delete();
                             }
-
+                            
                             Notification::make()
                                 ->title('Записи удалены')
                                 ->success()

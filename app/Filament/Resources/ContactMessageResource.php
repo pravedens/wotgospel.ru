@@ -1,16 +1,15 @@
 <?php
 
 namespace App\Filament\Resources;
+
+use App\Filament\Resources\ContactMessageResource\Pages;
+use App\Models\ContactMessage;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-
-use App\Filament\Resources\ContactMessageResource\Pages;
-use App\Models\ContactMessage;
-use Filament\Forms;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -44,9 +43,32 @@ class ContactMessageResource extends Resource
     
     protected static UnitEnum|string|null $navigationGroup = 'Управление';
 
+    // 👇 ДОБАВЛЯЕМ ПРОВЕРКУ ПРАВ ДОСТУПА
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        
+        // Только супер-администраторы и администраторы могут просматривать сообщения
+        return $user && ($user->hasRole('super_admin') || $user->hasRole('admin') || $user->hasRole('pastor'));
+    }
+
+    // 👇 ОГРАНИЧИВАЕМ ВИДИМОСТЬ ЗАПИСЕЙ (опционально)
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+        
+        // Если не супер-админ, показываем только сообщения для его роли (опционально)
+        // Если нужно показывать все сообщения админам, можно ничего не менять
+        
+        return $query;
+    }
+
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('is_read', false)->count();
+        // Показываем только количество непрочитанных сообщений
+        $count = static::getModel()::where('is_read', false)->count();
+        return $count > 0 ? (string) $count : null;
     }
 
     /* ===================== FORM (Filament 4) ===================== */
@@ -54,49 +76,38 @@ class ContactMessageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
-            Section::make('Информация об отправителе')
-                ->schema([
-                    TextInput::make('name')
-                        ->label('Имя')
-                        ->disabled()
-                        ->dehydrated(false),
-                    TextInput::make('email')
-                        ->label('Email')
-                        ->email()
-                        ->disabled()
-                        ->dehydrated(false),
-                    Select::make('user_id')
-                        ->label('Пользователь')
-                        ->relationship('user', 'name')
-                        ->disabled()
-                        ->dehydrated(false),
-                    TextInput::make('ip')
-                        ->label('IP адрес')
-                        ->disabled()
-                        ->dehydrated(false),
-                    DateTimePicker::make('created_at')
-                        ->label('Дата отправки')
-                        ->disabled()
-                        ->dehydrated(false),
-                ])->columns(2),
-            
-            Section::make('Сообщение')
-                ->schema([
-                    Textarea::make('message')
-                        ->label('Текст сообщения')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->rows(10)
-                        ->columnSpanFull(),
-                ]),
-            
-            Section::make('Статус')
-                ->schema([
-                    Toggle::make('is_read')
-                        ->label('Прочитано')
-                        ->helperText('Отметьте, если сообщение прочитано')
-                        ->required(),
-                ]),
+            TextInput::make('name')
+                ->label('Имя')
+                ->disabled()
+                ->dehydrated(false),
+            TextInput::make('email')
+                ->label('Email')
+                ->email()
+                ->disabled()
+                ->dehydrated(false),
+            Select::make('user_id')
+                ->label('Пользователь')
+                ->relationship('user', 'name')
+                ->disabled()
+                ->dehydrated(false),
+            TextInput::make('ip')
+                ->label('IP адрес')
+                ->disabled()
+                ->dehydrated(false),
+            DateTimePicker::make('created_at')
+                ->label('Дата отправки')
+                ->disabled()
+                ->dehydrated(false),
+            Textarea::make('message')
+                ->label('Текст сообщения')
+                ->disabled()
+                ->dehydrated(false)
+                ->rows(10)
+                ->columnSpanFull(),
+            Toggle::make('is_read')
+                ->label('Прочитано')
+                ->helperText('Отметьте, если сообщение прочитано')
+                ->required(),
         ]);
     }
 
@@ -126,6 +137,16 @@ class ContactMessageResource extends Resource
                     ->label('Прочитано')
                     ->boolean()
                     ->sortable(),
+                TextColumn::make('recipient_role')
+                    ->label('Кому отправлено')
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'pastor' => 'Пастору',
+                        'minister' => 'Служителям',
+                        'pray' => 'Молитвенникам',
+                        'super_admin' => 'Администратору',
+                        default => $state,
+                    })
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Дата')
                     ->dateTime('d.m.Y H:i')
@@ -140,11 +161,19 @@ class ContactMessageResource extends Resource
                         '0' => 'Непрочитанные',
                         '1' => 'Прочитанные',
                     ]),
+                SelectFilter::make('recipient_role')
+                    ->label('Получатель')
+                    ->options([
+                        'pastor' => 'Пастору',
+                        'minister' => 'Служителям',
+                        'pray' => 'Молитвенникам',
+                        'super_admin' => 'Администратору',
+                    ]),
                 Filter::make('created_at')
                     ->form([
-                        Forms\Components\DatePicker::make('from')
+                        \Filament\Forms\Components\DatePicker::make('from')
                             ->label('От'),
-                        Forms\Components\DatePicker::make('until')
+                        \Filament\Forms\Components\DatePicker::make('until')
                             ->label('До'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -160,12 +189,10 @@ class ContactMessageResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->label('Просмотр'),
                 EditAction::make()
                     ->label('Редактировать')
                     ->color('warning'),
-                Tables\Actions\Action::make('markAsRead')
+                Action::make('markAsRead')
                     ->label('Отметить прочитанным')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
@@ -173,7 +200,7 @@ class ContactMessageResource extends Resource
                         $record->markAsRead();
                     })
                     ->visible(fn (ContactMessage $record): bool => !$record->is_read),
-                Tables\Actions\Action::make('markAsUnread')
+                Action::make('markAsUnread')
                     ->label('Отметить непрочитанным')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
@@ -186,7 +213,7 @@ class ContactMessageResource extends Resource
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('markAsReadBulk')
+                    Action::make('markAsReadBulk')
                         ->label('Отметить прочитанными')
                         ->icon('heroicon-o-check-circle')
                         ->action(function (Collection $records) {
@@ -202,7 +229,6 @@ class ContactMessageResource extends Resource
     {
         return [
             'index' => Pages\ListContactMessages::route('/'),
-            'view' => Pages\ViewContactMessage::route('/{record}'),
             'edit' => Pages\EditContactMessage::route('/{record}/edit'),
         ];
     }

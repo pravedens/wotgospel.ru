@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Denomination;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DenominationPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_denomination');
+        return $authUser->can('ViewAny:Denomination');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Denomination $denomination): bool
+    public function view(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('view_denomination');
+        return $authUser->can('View:Denomination');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_denomination');
+        return $authUser->can('Create:Denomination');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Denomination $denomination): bool
+    public function update(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('update_denomination');
+        return $authUser->can('Update:Denomination');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Denomination $denomination): bool
+    public function delete(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('delete_denomination');
+        return $authUser->can('Delete:Denomination');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_denomination');
+        return $authUser->can('DeleteAny:Denomination');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Denomination $denomination): bool
+    public function restore(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('force_delete_denomination');
+        return $authUser->can('Restore:Denomination');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('force_delete_any_denomination');
+        return $authUser->can('ForceDelete:Denomination');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Denomination $denomination): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_denomination');
+        return $authUser->can('ForceDeleteAny:Denomination');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_denomination');
+        return $authUser->can('RestoreAny:Denomination');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Denomination $denomination): bool
+    public function replicate(AuthUser $authUser, Denomination $denomination): bool
     {
-        return $user->can('replicate_denomination');
+        return $authUser->can('Replicate:Denomination');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_denomination');
+        return $authUser->can('Reorder:Denomination');
     }
+
 }

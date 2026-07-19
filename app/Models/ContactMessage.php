@@ -23,6 +23,9 @@ class ContactMessage extends Model
         'ip',
         'user_agent',
         'is_read',
+        'recipient_role',
+        'recipient_email',
+        'recipient_emails_list',
     ];
     
     /**

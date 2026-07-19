@@ -24,7 +24,9 @@ class Post extends Model
         'thumbnail_url',
         'display_text_filename',
         'clean_description',  // Добавляем
-        'clean_content'       // Добавляем
+        'clean_content',       // Добавляем
+        'views_count',   // ⭐ добавить
+        'likes_count'    // ⭐ добавить
     ];
     
     protected $casts = [

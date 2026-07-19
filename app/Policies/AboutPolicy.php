@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\About;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AboutPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_about');
+        return $authUser->can('ViewAny:About');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, About $about): bool
+    public function view(AuthUser $authUser, About $about): bool
     {
-        return $user->can('view_about');
+        return $authUser->can('View:About');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_about');
+        return $authUser->can('Create:About');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, About $about): bool
+    public function update(AuthUser $authUser, About $about): bool
     {
-        return $user->can('update_about');
+        return $authUser->can('Update:About');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, About $about): bool
+    public function delete(AuthUser $authUser, About $about): bool
     {
-        return $user->can('delete_about');
+        return $authUser->can('Delete:About');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_about');
+        return $authUser->can('DeleteAny:About');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, About $about): bool
+    public function restore(AuthUser $authUser, About $about): bool
     {
-        return $user->can('force_delete_about');
+        return $authUser->can('Restore:About');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, About $about): bool
     {
-        return $user->can('force_delete_any_about');
+        return $authUser->can('ForceDelete:About');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, About $about): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_about');
+        return $authUser->can('ForceDeleteAny:About');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_about');
+        return $authUser->can('RestoreAny:About');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, About $about): bool
+    public function replicate(AuthUser $authUser, About $about): bool
     {
-        return $user->can('replicate_about');
+        return $authUser->can('Replicate:About');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_about');
+        return $authUser->can('Reorder:About');
     }
+
 }

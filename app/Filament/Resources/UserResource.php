@@ -90,6 +90,14 @@ class UserResource extends Resource
                 ->searchable()
                 ->required(),
                 
+            Select::make('ministerCategories')
+                ->label('Категории служения (для служителей)')
+                ->multiple()
+                ->relationship('ministerCategories', 'name')
+                ->preload()
+                ->searchable()
+                ->visible(fn ($record) => $record?->hasRole('minister') ?? false),
+                
             DateTimePicker::make('email_verified_at')
                 ->label('Email подтверждён')
                 ->native(false)
@@ -126,6 +134,13 @@ class UserResource extends Resource
                         'user' => 'success',
                         default => 'gray',
                     }),
+                    
+                TextColumn::make('ministerCategories.name')
+                    ->label('Категории служения')
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->limitList(3)
+                    ->visible(fn ($record) => $record?->hasRole('minister') ?? false),
                     
                 IconColumn::make('email_verified_at')
                     ->label('Подтверждён')

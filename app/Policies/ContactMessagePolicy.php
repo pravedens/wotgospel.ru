@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\ContactMessage;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ContactMessagePolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_contact::message');
+        return $authUser->can('ViewAny:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, ContactMessage $contactMessage): bool
+    public function view(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('view_contact::message');
+        return $authUser->can('View:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_contact::message');
+        return $authUser->can('Create:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, ContactMessage $contactMessage): bool
+    public function update(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('update_contact::message');
+        return $authUser->can('Update:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, ContactMessage $contactMessage): bool
+    public function delete(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('delete_contact::message');
+        return $authUser->can('Delete:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_contact::message');
+        return $authUser->can('DeleteAny:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, ContactMessage $contactMessage): bool
+    public function restore(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('force_delete_contact::message');
+        return $authUser->can('Restore:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('force_delete_any_contact::message');
+        return $authUser->can('ForceDelete:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, ContactMessage $contactMessage): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_contact::message');
+        return $authUser->can('ForceDeleteAny:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_contact::message');
+        return $authUser->can('RestoreAny:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, ContactMessage $contactMessage): bool
+    public function replicate(AuthUser $authUser, ContactMessage $contactMessage): bool
     {
-        return $user->can('replicate_contact::message');
+        return $authUser->can('Replicate:ContactMessage');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_contact::message');
+        return $authUser->can('Reorder:ContactMessage');
     }
+
 }

@@ -29,6 +29,11 @@ class RoleResource extends Resource
     protected static UnitEnum|string|null $navigationGroup = 'Администрирование';
     protected static ?string $navigationLabel = 'Роли';
     
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+    
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([

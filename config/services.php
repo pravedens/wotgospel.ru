@@ -35,4 +35,35 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Web Push (VAPID) Configuration
+    |--------------------------------------------------------------------------
+    */
+    'webpush' => [
+        'vapid' => [
+            'public_key' => env('VAPID_PUBLIC_KEY'),
+            'private_key' => env('VAPID_PRIVATE_KEY'),
+            'subject' => env('VAPID_SUBJECT', 'https://wotnt.ru'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SMS Configuration
+    |--------------------------------------------------------------------------
+    */
+    'sms' => [
+        'api_key' => env('SMS_API_KEY'),
+        'sender' => env('SMS_SENDER', 'WoTNT'),
+        'api_url' => env('SMS_API_URL', 'https://your-sms-gateway.com/send'),
+    ],
+    
+    'yandex' => [
+    'captcha' => [
+        'site_key' => env('YANDEX_CAPTCHA_SITE_KEY'),
+        'secret_key' => env('YANDEX_CAPTCHA_SECRET_KEY'),
+    ],
+],
+
 ];

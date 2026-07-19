@@ -8,9 +8,12 @@ return [
     */
     'auth' => [
     'guard' => env('FILAMENT_AUTH_GUARD', 'web'),
+    'remember' => true,
     'pages' => [
         'login' => \Filament\Http\Livewire\Auth\Login::class,
     ],
+        // 🆕 Отключаем 2FA
+    'two_factor' => false,
 ],
 
     /*

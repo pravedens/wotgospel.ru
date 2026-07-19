@@ -1,0 +1,34 @@
+/* Переопределяем сетку на большее количество колонок */
+.fi-grid {
+    --cols-lg: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-columns: var(--cols-lg) !important;
+}
+
+/* На средних экранах 4 колонки */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .fi-grid {
+        --cols-lg: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+/* На маленьких экранах 2 колонки */
+@media (max-width: 1023px) {
+    .fi-grid {
+        --cols-lg: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Поля, которые должны быть на всю ширину */
+[data-field-key="call_question"],
+[data-field-key="content"],
+[data-field-key="practice_task"],
+[data-field-key="scripture_verse_ids"] {
+    grid-column: span 6 / span 6 !important;
+}
+
+/* Убираем ограничение ширины контейнера */
+.fi-main-ctn {
+    max-width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}

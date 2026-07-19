@@ -38,6 +38,11 @@ class PostResource extends Resource
     
     protected static UnitEnum|string|null $navigationGroup = 'Проповеди';
     
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+    
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -64,10 +69,6 @@ class PostResource extends Resource
             TextInput::make('rutube')->label('Rutube')->maxLength(255)->url(),
             TextInput::make('dzen')->label('Дзен')->maxLength(255)->url(),
             TextInput::make('vkVideo')->label('VK Видео')->maxLength(255)->url(),
-            
-            // Ссылки на аудио и текст (если нужны отдельные ссылки)
-            TextInput::make('audio')->label('Ссылка на аудио')->maxLength(255)->url(),
-            TextInput::make('text')->label('Ссылка на текст')->maxLength(255)->url(),
         ]);
     }
 

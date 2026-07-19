@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -13,109 +14,271 @@ use Illuminate\Support\Facades\Cache;
 class ContactsController extends Controller
 {
     /**
-     * Send contact message
+     * Get list of available recipients by roles
      */
-    public function send(Request $request)
+    public function getRecipients()
     {
         try {
-            // Проверка авторизации
-            if (!auth()->check()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Только авторизованные пользователи могут отправлять сообщения'
-                ], 401);
+            $recipients = [];
+            
+            // Получаем пользователей по ролям и собираем их email'ы
+            $roles = ['pastor', 'minister', 'pray', 'super_admin'];
+            
+            foreach ($roles as $role) {
+                $users = User::role($role)->get();
+                $emails = $users->pluck('email')->filter()->values()->toArray();
+                
+                // Названия ролей для отображения
+                $roleNames = [
+                    'pastor' => 'Пастору',
+                    'minister' => 'Служителям',
+                    'pray' => 'Молитвенникам',
+                    'super_admin' => 'Администратору сайта'
+                ];
+                
+                $recipients[] = [
+                    'role' => $role,
+                    'name' => $roleNames[$role],
+                    'emails' => $emails,
+                    'count' => count($emails),
+                    'description' => $this->getRoleDescription($role),
+                    'has_recipients' => count($emails) > 0  // 👈 ДОБАВЛЕНО
+                ];
             }
-            
-            $user = auth()->user();
-            
-            // Защита от дублей на уровне сессии
-            $sessionKey = 'contact_sent_' . session()->getId();
-            if (Cache::get($sessionKey)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Сообщение уже отправлено. Пожалуйста, подождите.'
-                ], 429);
-            }
-            
-            // Валидация
-            $validator = Validator::make($request->all(), [
-                'message' => 'required|string|max:5000'
-            ]);
-            
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ошибка валидации',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            
-            // Очистка от тегов
-            $message = strip_tags($request->message);
-            
-            // Данные для сохранения
-            $data = [
-                'name' => $user->name,
-                'email' => $user->email,
-                'message' => $message,
-                'user_id' => $user->id,
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'is_read' => false,
-            ];
-            
-            // Логируем
-            Log::info('Contact form submitted', [
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'user_id' => $data['user_id'],
-                'message_length' => strlen($data['message'])
-            ]);
-            
-            // Сохраняем в базу данных
-            $contact = ContactMessage::create($data);
-            Log::info('Contact message saved', ['contact_id' => $contact->id]);
-            
-            // Отправляем email уведомления
-            $this->sendEmailNotifications($data, $contact->id);
-            
-            // Сохраняем флаг отправки в кэш на 5 минут
-            Cache::put($sessionKey, true, 300);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Сообщение отправлено'
+                'recipients' => $recipients
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Contact form error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            
+            Log::error('Error getting recipients: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка сервера. Попробуйте позже.'
+                'message' => 'Ошибка получения списка получателей'
             ], 500);
         }
     }
     
     /**
-     * Send email notifications to admins
+     * Get role description
      */
-    private function sendEmailNotifications(array $data, int $contactId): void
+    private function getRoleDescription(string $role): string
     {
-        // Получаем email для отправки из .env
-        $adminEmails = env('CONTACT_ADMIN_EMAILS', 'admin@wotgospel.ru');
-        $emails = array_map('trim', explode(',', $adminEmails));
-        $emails = array_unique($emails);
+        return match($role) {
+            'pastor' => 'Сообщение будет отправлено пастору церкви',
+            'minister' => 'Сообщение получат все служители церкви',
+            'pray' => 'Ваше сообщение увидят молитвенники, которые будут молиться за вас',
+            'super_admin' => 'Сообщение будет отправлено администратору сайта',
+            default => ''
+        };
+    }
+    
+    /**
+ * Get public list of recipients (for guests)
+ */
+public function getPublicRecipients()
+{
+    try {
+        $recipients = [];
         
-        // Добавляем основной email если его нет в списке
-        $mainEmail = env('MAIL_FROM_ADDRESS', 'admin@wotgospel.ru');
-        if (!in_array($mainEmail, $emails)) {
-            $emails[] = $mainEmail;
+        $roles = ['pastor', 'minister', 'pray', 'super_admin'];
+        
+        foreach ($roles as $role) {
+            $users = User::role($role)->get();
+            $emails = $users->pluck('email')->filter()->values()->toArray();
+            
+            $roleNames = [
+                'pastor' => 'Пастору',
+                'minister' => 'Служителям',
+                'pray' => 'Молитвенникам',
+                'super_admin' => 'Администратору сайта'
+            ];
+            
+            $recipients[] = [
+                'role' => $role,
+                'name' => $roleNames[$role],
+                'count' => count($emails),
+                'description' => $this->getRoleDescription($role),
+                'has_recipients' => count($emails) > 0
+            ];
         }
         
-        Log::info('Sending contact email to: ' . implode(', ', $emails));
+        return response()->json([
+            'success' => true,
+            'recipients' => $recipients
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error getting public recipients: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'recipients' => []
+        ], 500);
+    }
+}
+    
+    /**
+     * Send contact message
+     */
+    public function send(Request $request)
+{
+    try {
+        $user = auth()->user();
+        $isAuthenticated = $user !== null;
+        
+        // Валидация
+        $rules = [
+            'message' => 'required|string|max:5000',
+            'recipient_role' => 'required|string|in:pastor,minister,pray,super_admin'
+        ];
+        
+        if (!$isAuthenticated) {
+            $rules['name'] = 'required|string|max:255';
+            $rules['email'] = 'required|email|max:255';
+            $rules['captcha_token'] = 'required|string';
+        }
+        
+        $validator = Validator::make($request->all(), $rules);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка валидации',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        // Проверка капчи для неавторизованных
+        if (!$isAuthenticated) {
+            $captchaValid = $this->verifyCaptcha($request->captcha_token);
+            if (!$captchaValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Проверка капчи не пройдена'
+                ], 422);
+            }
+        }
+        
+        // Защита от дублей
+        $sessionKey = 'contact_sent_' . session()->getId();
+        if (Cache::get($sessionKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Сообщение уже отправлено. Пожалуйста, подождите.'
+            ], 429);
+        }
+        
+        // Очистка от тегов
+        $message = strip_tags($request->message);
+        $recipientRole = $request->recipient_role;
+        
+        // Данные отправителя
+        if ($isAuthenticated) {
+            $name = $user->name;
+            $email = $user->email;
+            $userId = $user->id;
+        } else {
+            $name = strip_tags($request->name);
+            $email = strip_tags($request->email);
+            $userId = null;
+        }
+        
+        // Получаем email'ы получателей
+        $recipientEmails = $this->getRecipientEmailsByRole($recipientRole);
+        
+        if (empty($recipientEmails)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Не удалось определить получателя сообщения.'
+            ], 400);
+        }
+        
+        // Данные для сохранения
+        $data = [
+            'name' => $name,
+            'email' => $email,
+            'message' => $message,
+            'user_id' => $userId,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'is_read' => false,
+            'recipient_role' => $recipientRole,
+            'recipient_emails_list' => implode(', ', $recipientEmails)
+        ];
+        
+        // Сохраняем в БД
+        $contact = ContactMessage::create($data);
+        
+        // Отправляем email уведомления
+        $this->sendEmailNotifications($data, $recipientEmails, $contact->id);
+        
+        // Сохраняем флаг отправки в кэш на 5 минут
+        Cache::put($sessionKey, true, 300);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Сообщение отправлено'
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Contact form error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка сервера. Попробуйте позже.'
+        ], 500);
+    }
+}
+
+/**
+ * Verify Yandex Captcha
+ */
+private function verifyCaptcha($token): bool
+{
+    $secretKey = config('services.yandex.captcha.secret_key');
+    
+    if (!$secretKey) {
+        Log::warning('Yandex Captcha secret key not configured');
+        return false;
+    }
+    
+    try {
+        $response = Http::asForm()->post('https://smartcaptcha.cloud.yandex.ru/validate', [
+            'secret' => $secretKey,
+            'token' => $token,
+            'ip' => request()->ip(),
+        ]);
+        
+        $data = $response->json();
+        
+        return isset($data['status']) && $data['status'] === 'ok';
+    } catch (\Exception $e) {
+        Log::error('Captcha verification failed: ' . $e->getMessage());
+        return false;
+    }
+}
+    
+    /**
+     * Get recipient emails by role (только из базы данных)
+     */
+    private function getRecipientEmailsByRole(string $role): array
+    {
+        // Получаем пользователей с этой ролью
+        $users = User::role($role)->get();
+        $emails = $users->pluck('email')->filter()->values()->toArray();
+        
+        return $emails;
+    }
+    
+    /**
+     * Send email notifications to selected recipients
+     */
+    private function sendEmailNotifications(array $data, array $recipientEmails, int $contactId): void
+    {
+        // Убираем дубли
+        $emails = array_unique($recipientEmails);
+        
+        Log::info('Sending contact email to recipients: ' . implode(', ', $emails));
         
         // Отправляем каждому получателю
         foreach ($emails as $email) {
@@ -138,18 +301,27 @@ class ContactsController extends Controller
      */
     private function sendSingleEmail(string $email, array $data, int $contactId): void
     {
-        Mail::send([], [], function ($mail) use ($email, $data, $contactId) {
+        $roleNames = [
+            'pastor' => 'Пастору',
+            'minister' => 'Служителям',
+            'pray' => 'Молитвенникам',
+            'super_admin' => 'Администратору'
+        ];
+        
+        $roleName = $roleNames[$data['recipient_role']] ?? $data['recipient_role'];
+        
+        Mail::send([], [], function ($mail) use ($email, $data, $contactId, $roleName) {
             $mail->to($email)
-                 ->subject('Новое сообщение от ' . $data['name'])
+                 ->subject('Новое сообщение от ' . $data['name'] . ' (' . $roleName . ')')
                  ->replyTo($data['email'], $data['name'])
-                 ->html($this->getEmailHtml($data, $contactId));
+                 ->html($this->getEmailHtml($data, $contactId, $roleName));
         });
     }
     
     /**
      * Get email HTML content
      */
-    private function getEmailHtml(array $data, int $contactId): string
+    private function getEmailHtml(array $data, int $contactId, string $roleName): string
     {
         return '
             <!DOCTYPE html>
@@ -168,6 +340,7 @@ class ContactsController extends Controller
                     .message-box { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #4f46e5; margin-top: 15px; }
                     .badge { display: inline-block; background: #4f46e5; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-bottom: 15px; }
                     .button { display: inline-block; background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; margin-top: 15px; }
+                    .recipient-badge { background: #10b981; }
                 </style>
             </head>
             <body>
@@ -177,6 +350,7 @@ class ContactsController extends Controller
                     </div>
                     <div class="content">
                         <div class="badge">Сообщение #' . $contactId . '</div>
+                        <div class="badge recipient-badge">Получатель: ' . htmlspecialchars($roleName) . '</div>
                         
                         <div class="info">
                             <p><strong>👤 От:</strong> ' . htmlspecialchars($data['name']) . '</p>
@@ -217,6 +391,9 @@ class ContactsController extends Controller
             ->when($request->email, function ($query, $email) {
                 return $query->fromEmail($email);
             })
+            ->when($request->recipient_role, function ($query, $role) {
+                return $query->where('recipient_role', $role);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate($request->per_page ?? 20);
         
@@ -229,7 +406,6 @@ class ContactsController extends Controller
     public function show($id)
     {
         $message = ContactMessage::with('user')->findOrFail($id);
-        
         return response()->json($message);
     }
     

@@ -49,23 +49,26 @@ class AboutController extends Controller
     /**
      * Получение конкретной статьи по slug
      */
-    public function show($slug)
-    {
-        try {
-            $about = About::with('denomination')
-                ->where('slug', $slug)
-                ->first();
-                
-            if (!$about) {
-                return response()->json(['error' => 'About not found'], 404);
-            }
-
-            return response()->json($about);
-        } catch (\Exception $e) {
-            Log::error('AboutController@show error: ' . $e->getMessage());
-            return response()->json(['error' => 'Internal server error'], 500);
+    public function show(Request $request, $slug)
+{
+    try {
+        $about = About::with('denomination')
+            ->where('slug', $slug)
+            ->first();
+            
+        if (!$about) {
+            return response()->json(['error' => 'About not found'], 404);
         }
+        
+        // ✅ Увеличиваем счётчик просмотров (один раз в день с одного IP)
+        $about->incrementViews($request->ip(), $request->userAgent());
+        
+        return response()->json($about);
+    } catch (\Exception $e) {
+        Log::error('AboutController@show error: ' . $e->getMessage());
+        return response()->json(['error' => 'Internal server error'], 500);
     }
+}
 
     /**
      * Получение всех категорий

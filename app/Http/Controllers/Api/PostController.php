@@ -18,65 +18,64 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'category_id' => 'nullable|exists:categories,id',
-                'group_id' => 'nullable|exists:groups,id',
-                'conference_id' => 'nullable|exists:conferences,id',
-                'per_page' => 'nullable|integer|min:1|max:500',
-                'page' => 'nullable|integer|min:1',
-                'search' => 'nullable|string|max:255',
-            ]);
+        // Валидация параметров запроса
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'nullable|exists:categories,id',
+            'group_id' => 'nullable|exists:groups,id',
+            'conference_id' => 'nullable|exists:conferences,id',
+            'per_page' => 'nullable|integer|min:1|max:500',
+            'page' => 'nullable|integer|min:1',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Ошибка валидации параметров',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Базовый запрос - убираем все сложности с аутентификацией
-            $query = Post::with(['category', 'group', 'conference'])
-                ->orderBy('created_at', 'desc');
-
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->category_id);
-            }
-
-            if ($request->filled('group_id')) {
-                $query->where('group_id', $request->group_id);
-            }
-
-            if ($request->filled('conference_id')) {
-                $query->where('conference_id', $request->conference_id);
-            }
-            
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where('title', 'like', "%{$search}%");
-            }
-
-            $perPage = $request->get('per_page', 8);
-            $posts = $query->paginate($perPage);
-
-            return response()->json($posts);
-            
-        } catch (\Exception $e) {
-            Log::error('Error in posts index: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
+        if ($validator->fails()) {
             return response()->json([
-                'data' => [],
-                'current_page' => 1,
-                'per_page' => $request->get('per_page', 8),
-                'total' => 0,
-                'last_page' => 1,
-                'from' => null,
-                'to' => null,
-            ]);
+                'message' => 'Ошибка валидации параметров',
+                'errors' => $validator->errors()
+            ], 422);
         }
+
+        // Базовый запрос с загрузкой связанных данных
+        $query = Post::with(['category', 'group', 'conference'])
+            ->orderBy('created_at', 'desc');
+
+        // Применение фильтров
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('group_id')) {
+            $query->where('group_id', $request->group_id);
+        }
+
+        if ($request->filled('conference_id')) {
+            $query->where('conference_id', $request->conference_id);
+        }
+        
+        // Поиск по заголовку и описанию
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%");
+                //->orWhere('description', 'like', "%{$search}%")
+                //->orWhere('content', 'like', "%{$search}%");
+            });
+        }
+
+        // Пагинация (по умолчанию 8 записей на странице)
+        $perPage = $request->get('per_page', 8);
+        $posts = $query->paginate($perPage);
+        
+        // Добавляем информацию об избранном для каждого поста
+        if (auth()->check()) {
+            $posts->getCollection()->transform(function ($post) {
+                $post->is_favorite = $post->is_favorited;
+                $post->favorites_count = $post->favorites_count;
+                return $post;
+            });
+        }
+
+        // Возвращаем пагинированный ответ
+        return response()->json($posts);
     }
 
     /**
@@ -84,35 +83,45 @@ class PostController extends Controller
      */
     public function show($slug)
     {
-        try {
-            $post = Post::with(['category', 'group', 'conference'])
-                ->where('slug', $slug)
-                ->first();
+        $post = Post::with(['category', 'group', 'conference'])
+            ->where('slug', $slug)
+            ->first();
 
-            if (!$post) {
-                return response()->json([
-                    'message' => 'Пост не найден'
-                ], 404);
-            }
-
-            return response()->json($post);
-            
-        } catch (\Exception $e) {
-            Log::error('Error in post show: ' . $e->getMessage(), [
-                'slug' => $slug
-            ]);
-            
-            return response()->json(['message' => 'Ошибка загрузки поста'], 500);
+        if (!$post) {
+            return response()->json([
+                'message' => 'Пост не найден'
+            ], 404);
         }
+        
+        // Добавляем специальный URL для просмотра
+        $post->word_viewer_url = $post->word_viewer_url ?? null;
+    
+        // Добавляем информацию об избранном
+        if (auth()->check()) {
+            $post->is_favorite = $post->is_favorited;
+            $post->favorites_count = $post->favorites_count;
+        }
+
+        return response()->json($post);
     }
 
     /**
-     * Получение всех категорий
+     * Получение категорий (спикеров) с учетом выбранных фильтров
      */
     public function filteredCategories(Request $request)
     {
         try {
-            $query = Category::withCount(['posts']);
+            $query = Category::withCount(['posts' => function($q) use ($request) {
+                if ($request->has('group_id')) {
+                    $q->where('group_id', $request->group_id);
+                }
+                if ($request->has('conference_id')) {
+                    $q->where('conference_id', $request->conference_id);
+                }
+                if ($request->has('category_id')) {
+                    $q->where('category_id', $request->category_id);
+                }
+            }]);
             
             return $query->having('posts_count', '>', 0)
                 ->orderBy('title')
@@ -125,15 +134,25 @@ class PostController extends Controller
     }
 
     /**
-     * Получение всех групп
+     * Получение групп (годов) с учетом выбранных фильтров
      */
     public function filteredGroups(Request $request)
     {
         try {
-            $query = Group::withCount(['posts']);
+            $query = Group::withCount(['posts' => function($q) use ($request) {
+                if ($request->has('category_id')) {
+                    $q->where('category_id', $request->category_id);
+                }
+                if ($request->has('conference_id')) {
+                    $q->where('conference_id', $request->conference_id);
+                }
+                if ($request->has('group_id')) {
+                    $q->where('group_id', $request->group_id);
+                }
+            }]);
             
             return $query->having('posts_count', '>', 0)
-                ->orderBy('title')
+                ->orderBy('title', 'desc') // Года по убыванию (новые сверху)
                 ->get();
                 
         } catch (\Exception $e) {
@@ -143,12 +162,22 @@ class PostController extends Controller
     }
 
     /**
-     * Получение всех конференций
+     * Получение конференций (мероприятий) с учетом выбранных фильтров
      */
     public function filteredConferences(Request $request)
     {
         try {
-            $query = Conference::withCount(['posts']);
+            $query = Conference::withCount(['posts' => function($q) use ($request) {
+                if ($request->has('category_id')) {
+                    $q->where('category_id', $request->category_id);
+                }
+                if ($request->has('group_id')) {
+                    $q->where('group_id', $request->group_id);
+                }
+                if ($request->has('conference_id')) {
+                    $q->where('conference_id', $request->conference_id);
+                }
+            }]);
             
             return $query->having('posts_count', '>', 0)
                 ->orderBy('title')
@@ -168,16 +197,33 @@ class PostController extends Controller
         try {
             $limit = $request->get('limit', 4);
             
+            // Получаем случайные посты
             $posts = Post::with(['category', 'group', 'conference'])
                 ->inRandomOrder()
                 ->limit($limit)
                 ->get();
             
+            // Добавляем информацию об избранном для каждого поста
+            if (auth()->check()) {
+                $user = auth()->user();
+                $posts->each(function ($post) use ($user) {
+                    $post->is_favorite = $user->favorites()
+                        ->where('post_id', $post->id)
+                        ->exists();
+                });
+            } else {
+                $posts->each(function ($post) {
+                    $post->is_favorite = false;
+                });
+            }
+            
             return response()->json($posts);
             
         } catch (\Exception $e) {
             Log::error('Error in recommended posts: ' . $e->getMessage());
-            return response()->json([]);
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

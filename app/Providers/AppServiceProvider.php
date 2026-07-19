@@ -5,8 +5,8 @@ namespace App\Providers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\Facades\Event as EventFacade; // Алиас для фасада Event
-use App\Models\Event as EventModel; // Алиас для модели Event
+use Illuminate\Support\Facades\Event as EventFacade;
+use App\Models\Event as EventModel;
 use App\Policies\EventPolicy;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Auth\Events\Login;
@@ -14,6 +14,12 @@ use App\Listeners\CheckUserAccess;
 use Filament\Facades\Filament;
 use Filament\Support\Facades\FilamentView;
 use Livewire\Livewire;
+use App\Observers\EventObserver;
+use App\Models\Event;
+use Illuminate\Notifications\ChannelManager;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushServiceProvider;
+use Illuminate\Auth\Middleware\Authenticate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // ⭐ РЕГИСТРИРУЕМ WEBPUSH SERVICE PROVIDER
+        $this->app->register(WebPushServiceProvider::class);
     }
 
     /**
@@ -31,11 +38,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Livewire::listen('fileUpload:failed', function ($component, $file) {
-        logger()->error('Livewire file upload failed', [
-            'component' => $component,
-            'file' => $file
-        ]);
-    });
+            logger()->error('Livewire file upload failed', [
+                'component' => $component,
+                'file' => $file
+            ]);
+        });
     
         Model::unguard();
         
@@ -56,7 +63,22 @@ class AppServiceProvider extends ServiceProvider
             fn (): string => view('favicons')->render()
         );
         
-        // Регистрация политик - используем EventModel вместо Event
+        // Регистрация политик
         \Illuminate\Support\Facades\Gate::policy(EventModel::class, EventPolicy::class);
+        
+        // Регистрируем Observer
+        Event::observe(EventObserver::class);
+        
+        // Регистрируем WebPush канал
+        $this->app->make(ChannelManager::class)->extend('webpush', function ($app) {
+            return $app->make(WebPushChannel::class);
+        });
+
+        // ====================== ИСПРАВЛЕНИЕ ОШИБКИ ======================
+        // Решаем проблему "Route [login] not defined" при использовании Sanctum
+        \Illuminate\Auth\Middleware\Authenticate::redirectUsing(
+            fn () => null
+        );
+        // ================================================================
     }
 }

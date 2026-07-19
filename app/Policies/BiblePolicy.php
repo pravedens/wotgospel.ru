@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Bible;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BiblePolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_bible');
+        return $authUser->can('ViewAny:Bible');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Bible $bible): bool
+    public function view(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('view_bible');
+        return $authUser->can('View:Bible');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_bible');
+        return $authUser->can('Create:Bible');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Bible $bible): bool
+    public function update(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('update_bible');
+        return $authUser->can('Update:Bible');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Bible $bible): bool
+    public function delete(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('delete_bible');
+        return $authUser->can('Delete:Bible');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_bible');
+        return $authUser->can('DeleteAny:Bible');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Bible $bible): bool
+    public function restore(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('force_delete_bible');
+        return $authUser->can('Restore:Bible');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('force_delete_any_bible');
+        return $authUser->can('ForceDelete:Bible');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Bible $bible): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_bible');
+        return $authUser->can('ForceDeleteAny:Bible');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_bible');
+        return $authUser->can('RestoreAny:Bible');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Bible $bible): bool
+    public function replicate(AuthUser $authUser, Bible $bible): bool
     {
-        return $user->can('replicate_bible');
+        return $authUser->can('Replicate:Bible');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_bible');
+        return $authUser->can('Reorder:Bible');
     }
+
 }

@@ -44,7 +44,10 @@ class CustomVerifyEmail extends Notification
      */
     public function toMail($notifiable)
     {
+        \Log::info('=== CustomVerifyEmail toMail START ===', ['email' => $notifiable->email]);
         $verificationUrl = $this->verificationUrl($notifiable);
+        
+        \Log::info('Verification URL generated', ['url' => $verificationUrl]);
 
         if (static::$toMailCallback) {
             return call_user_func(static::$toMailCallback, $notifiable, $verificationUrl);

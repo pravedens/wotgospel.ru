@@ -12,11 +12,12 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'api/*',
+        'api/*',                    // ✅ РАСКОММЕНТИРОВАТЬ ИЛИ ДОБАВИТЬ
         'sanctum/csrf-cookie',
         'login',
         'register',
         'logout',
         'admin/*',
+        'bible-school/*',           // ✅ ДОБАВИТЬ
     ];
 }

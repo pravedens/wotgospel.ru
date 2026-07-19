@@ -13,18 +13,12 @@ class CheckAdminAccess
         $user = $request->user();
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated'
-            ], 401);
+            return redirect()->route('filament.admin.auth.login');
         }
 
-        // Используем единый метод проверки
-        if (!$user->canAccessAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Недостаточно прав доступа'
-            ], 403);
+        // Разрешаем доступ: super_admin, admin, redactorEvents, teacher
+        if (!$user->hasAnyRole(['super_admin', 'admin', 'redactorEvents', 'teacher'])) {
+            abort(403, 'Недостаточно прав доступа');
         }
 
         return $next($request);
