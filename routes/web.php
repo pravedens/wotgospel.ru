@@ -1,16 +1,28 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use App\Http\Controllers\Auth\FilamentVerificationController;
 use App\Http\Controllers\Admin\CertificatePreviewController;
 
 Route::get("/test-mail", function () {
-    $user = App\Models\User::find(83);
+    $user = User::find(83);
     if ($user) {
         $user->sendEmailVerificationNotification();
         return "Email sent to " . $user->email;
     }
     return "User not found";
+});
+
+Route::get('/test-mail-debug', function () {
+    Mail::raw('Тестовое письмо из Debug Mail', function ($message) {
+        $message->to('test@example.com')
+                ->subject('Тест Debug Mail');
+    });
+
+    return 'Письмо отправлено!';
 });
 
 Route::get('/', function () {
@@ -19,12 +31,12 @@ Route::get('/', function () {
 
 Route::get('/admin/email-verification/verify/{id}/{hash}', [FilamentVerificationController::class, 'verify'])
     ->name('filament.admin.auth.email-verification.verify');
-    
+
 Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    
+
     // Всегда редиректим на главную страницу
     return redirect('/');
 })->name('logout')->middleware('web');

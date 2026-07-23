@@ -1,0 +1,23 @@
+{
+    "production_sync": {
+        "jobs": [
+            {
+                "name": "sync_wotgospel",
+                "type": "db-over-ssh",
+                "config": {
+                    "driver": "mysql",
+                    "ssh": "root@193.222.62.130",
+                    "db_host": "127.0.0.1",
+                    "db_port": 3306,
+                    "db_name": "wotgospel",
+                    "db_user": "wotgospel",
+                    "db_pass": "O1are2c2!TJP0R2cs",
+                    "target_prefix": "wotgospel_local"
+                },
+                "after": [
+                    "swap-env-database"
+                ]
+            }
+        ]
+    }
+}

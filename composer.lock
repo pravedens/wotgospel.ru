@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e4098162c14a73323a27ef773278d43f",
+    "content-hash": "ff0b34bfac1961b21939e6ca4595402c",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -12160,6 +12160,74 @@
                 }
             ],
             "time": "2026-02-18T12:37:06+00:00"
+        },
+        {
+            "name": "rouxtaccess/laravel-sync",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RouxtAccess/laravel-sync.git",
+                "reference": "2cb9d02e7da4a7bf1ac3b9bb100bd829fb77b00c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RouxtAccess/laravel-sync/zipball/2cb9d02e7da4a7bf1ac3b9bb100bd829fb77b00c",
+                "reference": "2cb9d02e7da4a7bf1ac3b9bb100bd829fb77b00c",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^12.0 || ^13.0",
+                "illuminate/contracts": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "laravel/prompts": "^0.1.6 || ^0.2 || ^0.3",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.16"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.14",
+                "orchestra/testbench": "^10.0 || ^11.0",
+                "pestphp/pest": "^3.0",
+                "pestphp/pest-plugin-arch": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Rouxtaccess\\Sync\\SyncServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Rouxtaccess\\Sync\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "John Roux",
+                    "email": "john.roux1@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Pull production databases, files and S3 buckets down to your local Laravel environment.",
+            "homepage": "https://github.com/rouxtaccess/laravel-sync",
+            "keywords": [
+                "database",
+                "development",
+                "laravel",
+                "rouxtaccess",
+                "sync"
+            ],
+            "support": {
+                "issues": "https://github.com/RouxtAccess/laravel-sync/issues",
+                "source": "https://github.com/RouxtAccess/laravel-sync/tree/v2.0.0"
+            },
+            "time": "2026-07-17T11:21:58+00:00"
         },
         {
             "name": "sebastian/cli-parser",

@@ -39,14 +39,14 @@ return [
 
         'smtp' => [
     'transport' => 'smtp',
-    'host' => env('MAIL_HOST', 'mail.wotgospel.ru'),
-    'port' => env('MAIL_PORT', 465),
-    'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
-    'username' => env('MAIL_USERNAME'),
-    'password' => env('MAIL_PASSWORD'),
-    'timeout' => null,
-    'local_domain' => env('MAIL_EHLO_DOMAIN'),
-    
+            'host' => env('MAIL_HOST', 'app.debugmail.io'),
+            'port' => env('MAIL_PORT', 25),
+            'encryption' => env('MAIL_ENCRYPTION', 'null'),
+            'username' => env('MAIL_USERNAME'),
+            'password' => env('MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+
     // Добавляем этот блок для обхода проблем с SSL
     'stream' => [
         'ssl' => [
@@ -120,8 +120,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'admin@wotgospel.ru'),
-        'name' => env('MAIL_FROM_NAME', 'Церковь "Слово Истины"'),
+        'address' => env('MAIL_FROM_ADDRESS', 'john.doe@example.org'),
+        'name' => env('MAIL_FROM_NAME', 'John Doe'),
     ],
 
 ];

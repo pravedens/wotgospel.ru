@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('favorites', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // users.id - bigint unsigned
-            $table->unsignedInteger('post_id'); // posts.id - int unsigned
+            $table->unsignedBigInteger('post_id'); // posts.id - int unsigned
             $table->timestamps();
             
             // Внешние ключи с правильными типами
