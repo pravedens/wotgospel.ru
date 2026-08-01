@@ -12,17 +12,17 @@ class CheckGroupLeaderRole
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
-        if (!$user->isGroupLeader() && !$user->isTeacher() && !$user->isSuperAdmin() && !$user->isPastor()) {
+        if (! $user->isGroupLeader() && ! $user->isTeacher() && ! $user->isSuperAdmin() && ! $user->isPastor()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для лидеров групп'
+                'message' => 'Доступ только для лидеров групп',
             ], 403);
         }
 

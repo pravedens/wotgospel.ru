@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class AvatarController extends Controller
@@ -23,7 +23,7 @@ class AvatarController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка валидации',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -36,7 +36,7 @@ class AvatarController extends Controller
 
         // Генерируем уникальное имя файла
         $file = $request->file('avatar');
-        $filename = 'avatars/' . Str::random(40) . '.' . $file->getClientOriginalExtension();
+        $filename = 'avatars/'.Str::random(40).'.'.$file->getClientOriginalExtension();
 
         // Сохраняем на S3
         $path = Storage::disk('s3')->put($filename, file_get_contents($file), 'public');
@@ -52,7 +52,7 @@ class AvatarController extends Controller
             'success' => true,
             'message' => 'Аватар успешно загружен',
             'avatar' => $filename,
-            'avatar_url' => $avatarUrl
+            'avatar_url' => $avatarUrl,
         ]);
     }
 
@@ -71,7 +71,7 @@ class AvatarController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Аватар удален'
+            'message' => 'Аватар удален',
         ]);
     }
 
@@ -90,7 +90,7 @@ class AvatarController extends Controller
         return response()->json([
             'success' => true,
             'avatar' => $user->avatar,
-            'avatar_url' => $avatarUrl
+            'avatar_url' => $avatarUrl,
         ]);
     }
 }

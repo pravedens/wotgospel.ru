@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamps();
-            
+
             $table->index(['minister_id', 'is_read']);
             $table->index('created_at');
         });

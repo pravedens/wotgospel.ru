@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BibleLessonCommentResource/Pages/EditBibleLessonComment.php
 
 namespace App\Filament\Resources\BibleLessonCommentResource\Pages;
@@ -10,7 +11,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditBibleLessonComment extends EditRecord
 {
     protected static string $resource = BibleLessonCommentResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

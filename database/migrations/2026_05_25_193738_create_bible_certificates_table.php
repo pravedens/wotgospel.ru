@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('pdf_url', 500)->nullable();
             $table->timestamp('issued_at')->useCurrent();
             $table->timestamps();
-            
+
             $table->index(['user_id', 'course_id']);
             $table->index('certificate_uuid');
             $table->index('issued_at');

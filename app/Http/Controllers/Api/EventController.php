@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Event;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use Laravel\Sanctum\PersonalAccessToken;
-use App\Services\NotificationService;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Event;
 use App\Services\ImageOptimizer;
+use App\Services\NotificationService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class EventController extends Controller
 {
@@ -30,17 +31,19 @@ class EventController extends Controller
      */
     private function canEditEvents($user): bool
     {
-        if (!$user) return false;
-        
-        return $user->hasRole('super_admin') || 
-               $user->hasRole('admin') || 
+        if (! $user) {
+            return false;
+        }
+
+        return $user->hasRole('super_admin') ||
+               $user->hasRole('admin') ||
                $user->hasRole('redactorEvents') ||
                $user->can('edit_events') ||
                $user->can('create_events') ||
-               $user->can('update_event') || 
+               $user->can('update_event') ||
                $user->can('delete_events');
     }
-    
+
     /**
      * Проверка, является ли пользователь пастором
      */
@@ -84,21 +87,21 @@ class EventController extends Controller
                 ->whereDate('startDate', '>=', Carbon::now());
 
             // Фильтры по правам доступа
-            if (!$canEdit) {
+            if (! $canEdit) {
                 if ($this->isPastor($user) || $isMinister) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true)
-                          ->orWhere('ministers_only', true);
+                            ->orWhere('members_only', true)
+                            ->orWhere('ministers_only', true);
                     });
                 } elseif ($isMember) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true);
+                            ->orWhere('members_only', true);
                     })->where('ministers_only', false);
                 } else {
                     $query->where('members_only', false)
-                          ->where('ministers_only', false);
+                        ->where('ministers_only', false);
                 }
             }
 
@@ -106,25 +109,30 @@ class EventController extends Controller
                 ->orderBy('startTime', 'asc')
                 ->limit($limit)
                 ->get();
-            
+
             // Разворачиваем конференции в их служения
             $result = [];
             foreach ($events as $event) {
                 if ($event->is_conference && $event->conferenceServices->count() > 0) {
                     foreach ($event->conferenceServices as $service) {
-                        if (count($result) >= $limit) break;
+                        if (count($result) >= $limit) {
+                            break;
+                        }
                         $result[] = $this->formatEventForCarousel($event, $service);
                     }
                 } else {
                     $result[] = $this->formatEventForCarousel($event);
                 }
-                if (count($result) >= $limit) break;
+                if (count($result) >= $limit) {
+                    break;
+                }
             }
 
             return response()->json($result);
 
         } catch (\Exception $e) {
-            Log::error('Upcoming events error: ' . $e->getMessage());
+            Log::error('Upcoming events error: '.$e->getMessage());
+
             return response()->json([], 500);
         }
     }
@@ -139,7 +147,7 @@ class EventController extends Controller
         $time = $isService ? $service->start_time : $event->startTime;
         $title = $isService ? $service->title : $event->title;
         $description = $isService ? ($service->description ?? $event->description) : $event->description;
-        
+
         $imageUrl = null;
         if ($event->thumbnail) {
             if (filter_var($event->thumbnail, FILTER_VALIDATE_URL)) {
@@ -147,7 +155,7 @@ class EventController extends Controller
             } elseif (str_starts_with($event->thumbnail, 'events/thumbnails/')) {
                 $imageUrl = "https://storage.yandexcloud.net/wotgospel-media/{$event->thumbnail}";
             } elseif (str_starts_with($event->thumbnail, 'public/')) {
-                $imageUrl = "https://wotgospel.ru/storage/" . str_replace('public/', '', $event->thumbnail);
+                $imageUrl = 'https://wotgospel.ru/storage/'.str_replace('public/', '', $event->thumbnail);
             } else {
                 $imageUrl = "https://storage.yandexcloud.net/wotgospel-media/events/thumbnails/{$event->thumbnail}";
             }
@@ -171,7 +179,7 @@ class EventController extends Controller
             'conference_service_id' => $isService ? $service->id : null,
         ];
     }
-    
+
     /**
      * Получение событий за месяц
      */
@@ -185,7 +193,7 @@ class EventController extends Controller
                 $request->setUserResolver(fn () => $user);
             }
         }
-        
+
         try {
             $month = $request->month ?? now()->month;
             $year = $request->year ?? now()->year;
@@ -205,42 +213,42 @@ class EventController extends Controller
                 ->orderBy('startTime');
 
             // Фильтры по правам доступа
-            if (!$canEdit) {
+            if (! $canEdit) {
                 $query->where('is_published', true)
-                      ->whereDate('startDate', '>=', Carbon::now()->startOfDay());
-                
+                    ->whereDate('startDate', '>=', Carbon::now()->startOfDay());
+
                 if ($this->isPastor($user) || $isMinister) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true)
-                          ->orWhere('ministers_only', true);
+                            ->orWhere('members_only', true)
+                            ->orWhere('ministers_only', true);
                     });
                 } elseif ($isMember) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true);
+                            ->orWhere('members_only', true);
                     })->where('ministers_only', false);
                 } else {
                     $query->where('members_only', false)
-                          ->where('ministers_only', false);
+                        ->where('ministers_only', false);
                 }
             }
 
             $events = $query->get();
-            
+
             $eventsByDay = [];
             $listEvents = [];
-            
+
             foreach ($events as $event) {
                 if ($event->is_conference && $event->conferenceServices->count() > 0) {
                     foreach ($event->conferenceServices as $service) {
                         $serviceDate = Carbon::parse($service->service_date);
                         $day = $serviceDate->day;
-                        
+
                         if ($serviceDate->month != $month || $serviceDate->year != $year) {
                             continue;
                         }
-                        
+
                         $calendarEvent = [
                             'id' => $event->id,
                             'title' => $service->title,
@@ -260,14 +268,14 @@ class EventController extends Controller
                             'conference_service_id' => $service->id,
                             'conference_title' => $event->title,
                             'attendees_count' => $event->attendees_count,
-                            'is_cancelled' => (!$event->is_published && !Carbon::parse($event->startDate)->isPast()),
+                            'is_cancelled' => (! $event->is_published && ! Carbon::parse($event->startDate)->isPast()),
                         ];
-                        
-                        if (!isset($eventsByDay[$day])) {
+
+                        if (! isset($eventsByDay[$day])) {
                             $eventsByDay[$day] = [];
                         }
                         $eventsByDay[$day][] = $calendarEvent;
-                        
+
                         $listEvents[] = [
                             'id' => $event->id,
                             'title' => $service->title,
@@ -288,7 +296,7 @@ class EventController extends Controller
                             'conference_service_id' => $service->id,
                             'conference_title' => $event->title,
                             'attendees_count' => $event->attendees_count,
-                            'is_cancelled' => (!$event->is_published && !Carbon::parse($event->startDate)->isPast()),
+                            'is_cancelled' => (! $event->is_published && ! Carbon::parse($event->startDate)->isPast()),
                         ];
                     }
                 } else {
@@ -297,7 +305,7 @@ class EventController extends Controller
                     if ($event->startTime) {
                         $localTime = Carbon::parse($event->startTime)->format('H:i');
                     }
-                    
+
                     $calendarEvent = [
                         'id' => $event->id,
                         'title' => $event->title,
@@ -315,14 +323,14 @@ class EventController extends Controller
                         'can_edit' => $canEdit,
                         'is_conference' => false,
                         'attendees_count' => $event->attendees_count,
-                        'is_cancelled' => (!$event->is_published && !Carbon::parse($event->startDate)->isPast()),
+                        'is_cancelled' => (! $event->is_published && ! Carbon::parse($event->startDate)->isPast()),
                     ];
-                    
-                    if (!isset($eventsByDay[$day])) {
+
+                    if (! isset($eventsByDay[$day])) {
                         $eventsByDay[$day] = [];
                     }
                     $eventsByDay[$day][] = $calendarEvent;
-                    
+
                     $listEvents[] = [
                         'id' => $event->id,
                         'title' => $event->title,
@@ -341,19 +349,19 @@ class EventController extends Controller
                         'can_edit' => $canEdit,
                         'is_conference' => false,
                         'attendees_count' => $event->attendees_count,
-                        'is_cancelled' => (!$event->is_published && !Carbon::parse($event->startDate)->isPast()),
+                        'is_cancelled' => (! $event->is_published && ! Carbon::parse($event->startDate)->isPast()),
                     ];
                 }
             }
-            
+
             foreach ($eventsByDay as $day => $dayEvents) {
-                usort($dayEvents, function($a, $b) {
+                usort($dayEvents, function ($a, $b) {
                     return ($a['time'] ?? '99:99') <=> ($b['time'] ?? '99:99');
                 });
                 $eventsByDay[$day] = $dayEvents;
             }
-            
-            usort($listEvents, function($a, $b) {
+
+            usort($listEvents, function ($a, $b) {
                 return ($a['startDate'] ?? '') <=> ($b['startDate'] ?? '');
             });
 
@@ -366,7 +374,8 @@ class EventController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Events index error: ' . $e->getMessage());
+            Log::error('Events index error: '.$e->getMessage());
+
             return response()->json([
                 'year' => $request->year ?? now()->year,
                 'month' => $request->month ?? now()->month,
@@ -376,7 +385,7 @@ class EventController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Создание нового события
      */
@@ -384,11 +393,11 @@ class EventController extends Controller
     {
         try {
             $user = $request->user();
-            
-            if (!$this->canEditEvents($user)) {
+
+            if (! $this->canEditEvents($user)) {
                 return response()->json(['message' => 'У вас нет прав на создание событий'], 403);
             }
-            
+
             $validated = $request->validate([
                 'title' => 'required_if:is_conference,false|string|max:255',
                 'slug' => 'nullable|string|unique:events,slug',
@@ -406,7 +415,7 @@ class EventController extends Controller
                 'is_conference' => 'boolean',
                 'conference_services' => 'nullable|json',
             ]);
-            
+
             $eventData = [
                 'title' => $validated['title'] ?? 'Конференция',
                 'description' => $validated['description'] ?? ($request->is_conference ? 'Конференция' : null),
@@ -422,39 +431,39 @@ class EventController extends Controller
                 'is_conference' => $validated['is_conference'] ?? false,
                 'created_by' => $user->id,
             ];
-            
+
             if (empty($validated['slug'])) {
-                $eventData['slug'] = Str::slug($eventData['title']) . '-' . uniqid();
+                $eventData['slug'] = Str::slug($eventData['title']).'-'.uniqid();
             } else {
                 $eventData['slug'] = $validated['slug'];
             }
-            
+
             if ($request->is_conference && $request->conference_services) {
                 $services = json_decode($request->conference_services, true);
-                
-                if (!empty($services)) {
+
+                if (! empty($services)) {
                     $firstService = $services[0];
-                    $eventData['title'] = 'Конференция: ' . ($firstService['title'] ?? 'Мероприятие');
+                    $eventData['title'] = 'Конференция: '.($firstService['title'] ?? 'Мероприятие');
                     $eventData['startDate'] = $firstService['service_date'] ?? now();
                     $eventData['startTime'] = $firstService['start_time'] ?? null;
-                    $eventData['description'] = 'Конференция с ' . count($services) . ' служениями';
-                    
+                    $eventData['description'] = 'Конференция с '.count($services).' служениями';
+
                     $servicesList = '';
                     foreach ($services as $i => $s) {
-                        $servicesList .= ($i+1) . '. ' . ($s['title'] ?? 'Служение') . 
-                                        ' — ' . ($s['service_date'] ?? 'дата не указана');
-                        if (!empty($s['start_time'])) {
-                            $servicesList .= ' в ' . $s['start_time'];
+                        $servicesList .= ($i + 1).'. '.($s['title'] ?? 'Служение').
+                                        ' — '.($s['service_date'] ?? 'дата не указана');
+                        if (! empty($s['start_time'])) {
+                            $servicesList .= ' в '.$s['start_time'];
                         }
-                        if (!empty($s['speaker'])) {
-                            $servicesList .= ' (спикер: ' . $s['speaker'] . ')';
+                        if (! empty($s['speaker'])) {
+                            $servicesList .= ' (спикер: '.$s['speaker'].')';
                         }
                         $servicesList .= "\n";
                     }
-                    $eventData['content'] = "📅 Программа конференции:\n\n" . $servicesList;
+                    $eventData['content'] = "📅 Программа конференции:\n\n".$servicesList;
                 }
             }
-            
+
             $thumbnailPath = null;
             if ($request->hasFile('thumbnail')) {
                 $file = $request->file('thumbnail');
@@ -465,22 +474,22 @@ class EventController extends Controller
                     height: 800,
                     quality: 85
                 );
-                
+
                 if ($optimizedPath) {
                     $thumbnailPath = $optimizedPath;
                     \Log::info('Thumbnail uploaded for event', ['path' => $thumbnailPath]);
                 } else {
-                    $filename = Str::slug($eventData['title']) . '-' . uniqid() . '.webp';
+                    $filename = Str::slug($eventData['title']).'-'.uniqid().'.webp';
                     $path = $file->storeAs('events/thumbnails', $filename, 's3');
                     $thumbnailPath = $path;
                     \Log::warning('Image optimization failed, using original', ['path' => $path]);
                 }
             }
-            
+
             $eventData['thumbnail'] = $thumbnailPath;
-            
+
             $event = Event::create($eventData);
-            
+
             if ($request->is_conference && $request->conference_services) {
                 $services = json_decode($request->conference_services, true);
                 foreach ($services as $service) {
@@ -494,25 +503,26 @@ class EventController extends Controller
                     ]);
                 }
             }
-            
+
             if (isset($this->notificationService)) {
                 $this->notificationService->notifyNewEvent($event);
             }
-            
+
             return response()->json([
                 'message' => 'Событие успешно создано',
-                'event' => $event->load('conferenceServices')
+                'event' => $event->load('conferenceServices'),
             ], 201);
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
+
+        } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Ошибка валидации',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Event store error: ' . $e->getMessage());
+            \Log::error('Event store error: '.$e->getMessage());
+
             return response()->json([
-                'message' => 'Ошибка создания события: ' . $e->getMessage()
+                'message' => 'Ошибка создания события: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -524,20 +534,20 @@ class EventController extends Controller
     {
         try {
             $user = $request->user();
-            
-            if (!$this->canEditEvents($user)) {
+
+            if (! $this->canEditEvents($user)) {
                 return response()->json(['message' => 'У вас нет прав на редактирование событий'], 403);
             }
-            
+
             $event = Event::findOrFail($id);
-            
+
             // 🆕 Сохраняем original значения ДО изменения
             $originalIsPublished = $event->is_published;
             $originalStatus = $event->status ?? 'active';
-            
+
             $validated = $request->validate([
                 'title' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|unique:events,slug,' . $id,
+                'slug' => 'sometimes|string|unique:events,slug,'.$id,
                 'description' => 'nullable|string',
                 'content' => 'nullable|string',
                 'info' => 'nullable|string',
@@ -552,55 +562,55 @@ class EventController extends Controller
                 'is_conference' => 'boolean',
                 'conference_services' => 'nullable|json',
             ]);
-            
+
             $eventData = collect($validated)
                 ->except(['conference_services'])
                 ->toArray();
-            
+
             // 🆕 Проверяем, было ли событие опубликовано и стало неопубликованным (отмена)
             $newIsPublished = $request->input('is_published', $event->is_published);
-            
+
             if ($originalIsPublished === true && $newIsPublished === false) {
                 // Отправляем уведомления об отмене всем, кто записался
                 \Log::info('Event being unpublished (cancelled)', [
                     'event_id' => $event->id,
-                    'event_title' => $event->title
+                    'event_title' => $event->title,
                 ]);
-                
+
                 $this->notificationService->sendEventCancellationNotifications($event);
-                
+
                 // Обновляем статус
                 $eventData['status'] = 'cancelled';
-            } 
+            }
             // Если событие снова опубликовали
             elseif ($originalIsPublished === false && $newIsPublished === true) {
                 $eventData['status'] = 'active';
             }
-            
+
             // Если это конференция и переданы служения — обновляем их
             if ($request->has('is_conference') && $request->is_conference && $request->has('conference_services')) {
                 $services = json_decode($request->conference_services, true);
-                
-                if (!empty($services)) {
+
+                if (! empty($services)) {
                     $firstService = $services[0];
                     $eventData['startDate'] = $firstService['service_date'] ?? $event->startDate;
                     $eventData['startTime'] = $firstService['start_time'] ?? null;
-                    $eventData['description'] = 'Конференция с ' . count($services) . ' служениями';
-                    
+                    $eventData['description'] = 'Конференция с '.count($services).' служениями';
+
                     $servicesList = '';
                     foreach ($services as $i => $s) {
-                        $servicesList .= ($i+1) . '. ' . ($s['title'] ?? 'Служение') . 
-                                        ' — ' . ($s['service_date'] ?? 'дата не указана');
-                        if (!empty($s['start_time'])) {
-                            $servicesList .= ' в ' . $s['start_time'];
+                        $servicesList .= ($i + 1).'. '.($s['title'] ?? 'Служение').
+                                        ' — '.($s['service_date'] ?? 'дата не указана');
+                        if (! empty($s['start_time'])) {
+                            $servicesList .= ' в '.$s['start_time'];
                         }
-                        if (!empty($s['speaker'])) {
-                            $servicesList .= ' (спикер: ' . $s['speaker'] . ')';
+                        if (! empty($s['speaker'])) {
+                            $servicesList .= ' (спикер: '.$s['speaker'].')';
                         }
                         $servicesList .= "\n";
                     }
-                    $eventData['content'] = "📅 Программа конференции:\n\n" . $servicesList;
-                    
+                    $eventData['content'] = "📅 Программа конференции:\n\n".$servicesList;
+
                     $event->conferenceServices()->delete();
                     foreach ($services as $service) {
                         $event->conferenceServices()->create([
@@ -614,10 +624,10 @@ class EventController extends Controller
                     }
                 }
             }
-            
+
             if ($request->hasFile('thumbnail')) {
                 $event->deleteThumbnail();
-                
+
                 $file = $request->file('thumbnail');
                 $optimizedPath = ImageOptimizer::optimizeAndStore(
                     file: $file,
@@ -626,29 +636,30 @@ class EventController extends Controller
                     height: 800,
                     quality: 85
                 );
-                
+
                 if ($optimizedPath) {
                     $eventData['thumbnail'] = $optimizedPath;
                 } else {
-                    $filename = Str::slug($eventData['title'] ?? $event->title) . '-' . uniqid() . '.webp';
+                    $filename = Str::slug($eventData['title'] ?? $event->title).'-'.uniqid().'.webp';
                     $path = $file->storeAs('events/thumbnails', $filename, 's3');
                     $eventData['thumbnail'] = $path;
                 }
             }
-            
+
             $event->update($eventData);
-            
+
             return response()->json([
                 'message' => 'Событие успешно обновлено',
-                'event' => $event->load('conferenceServices')
+                'event' => $event->load('conferenceServices'),
             ]);
-            
+
         } catch (\Exception $e) {
-            \Log::error('Event update error: ' . $e->getMessage());
-            return response()->json(['message' => 'Ошибка обновления события: ' . $e->getMessage()], 500);
+            \Log::error('Event update error: '.$e->getMessage());
+
+            return response()->json(['message' => 'Ошибка обновления события: '.$e->getMessage()], 500);
         }
     }
-    
+
     /**
      * Удаление события
      */
@@ -656,31 +667,32 @@ class EventController extends Controller
     {
         try {
             $user = $request->user();
-            
-            if (!$this->canEditEvents($user)) {
+
+            if (! $this->canEditEvents($user)) {
                 return response()->json(['message' => 'У вас нет прав на удаление событий'], 403);
             }
-            
+
             $event = Event::findOrFail($id);
-            
+
             $event->deleteThumbnail();
-            
+
             $event->delete();
-            
+
             \Log::info('Event deleted successfully', [
                 'event_id' => $id,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
-            
+
             return response()->json([
-                'message' => 'Событие успешно удалено'
+                'message' => 'Событие успешно удалено',
             ]);
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+        } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Событие не найдено'], 404);
         } catch (\Exception $e) {
-            \Log::error('Event destroy error: ' . $e->getMessage());
-            return response()->json(['message' => 'Ошибка удаления события: ' . $e->getMessage()], 500);
+            \Log::error('Event destroy error: '.$e->getMessage());
+
+            return response()->json(['message' => 'Ошибка удаления события: '.$e->getMessage()], 500);
         }
     }
 
@@ -703,14 +715,14 @@ class EventController extends Controller
             $canEdit = $this->canEditEvents($user);
             $isMember = $this->isMember($user);
             $isMinister = $this->isMinister($user);
-            
+
             $event = Event::where('slug', $slug)->with('conferenceServices')->first();
 
-            if (!$event) {
+            if (! $event) {
                 return response()->json(['message' => 'Событие не найдено'], 404);
             }
 
-            if (!$event->is_published && !$canEdit) {
+            if (! $event->is_published && ! $canEdit) {
                 return response()->json(['message' => 'Событие не опубликовано'], 404);
             }
 
@@ -718,32 +730,32 @@ class EventController extends Controller
                 $hasUpcomingService = $event->conferenceServices()
                     ->where('service_date', '>=', Carbon::now())
                     ->exists();
-                
-                if (!$hasUpcomingService && !$canEdit && !$event->is_past) {
+
+                if (! $hasUpcomingService && ! $canEdit && ! $event->is_past) {
                     // Можно вернуть 410 или просто показать информацию
                 }
             } else {
                 if ($event->startTime) {
-    $eventDate = Carbon::parse($event->startDate->format('Y-m-d') . ' ' . substr($event->startTime, 0, 5));
-} else {
-    $eventDate = Carbon::parse($event->startDate);
-}
-                //$eventDate = Carbon::parse($event->startDate);
-                if ($eventDate->isPast() && !$canEdit) {
+                    $eventDate = Carbon::parse($event->startDate->format('Y-m-d').' '.substr($event->startTime, 0, 5));
+                } else {
+                    $eventDate = Carbon::parse($event->startDate);
+                }
+                // $eventDate = Carbon::parse($event->startDate);
+                if ($eventDate->isPast() && ! $canEdit) {
                     return response()->json(['message' => 'Событие уже прошло'], 410);
                 }
             }
 
-            if ($event->members_only && !$canEdit && !$isMember) {
+            if ($event->members_only && ! $canEdit && ! $isMember) {
                 return response()->json(['message' => 'Доступ запрещён. Это событие только для прихожан.'], 403);
             }
 
-            if ($event->ministers_only && !$canEdit && !$isMinister) {
+            if ($event->ministers_only && ! $canEdit && ! $isMinister) {
                 return response()->json(['message' => 'Доступ запрещён. Это событие только для служителей.'], 403);
             }
 
             $localTime = null;
-            if (!$event->is_conference && $event->startTime) {
+            if (! $event->is_conference && $event->startTime) {
                 $localTime = substr($event->startTime, 0, 5);
             }
 
@@ -774,9 +786,9 @@ class EventController extends Controller
                 'attendees_count' => $event->attendees_count,
                 'user_attending' => $event->isUserAttending($user),
                 'status' => $event->status ?? 'active',
-                'is_cancelled' => ($event->status === 'cancelled' || (!$event->is_published && !$event->isPast())),
+                'is_cancelled' => ($event->status === 'cancelled' || (! $event->is_published && ! $event->isPast())),
             ];
-            
+
             if ($event->is_conference) {
                 $eventModel = $event;
                 $response['conference_services'] = $event->conferenceServices->map(function ($service) use ($eventModel) {
@@ -789,7 +801,7 @@ class EventController extends Controller
                     } catch (\Exception $e) {
                         $registeredCount = 0;
                     }
-                    
+
                     return [
                         'id' => $service->id,
                         'service_date' => $service->service_date ? $service->service_date->toIso8601String() : null,
@@ -808,11 +820,12 @@ class EventController extends Controller
             return response()->json($response);
 
         } catch (\Exception $e) {
-            Log::error('Event show error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            return response()->json(['message' => 'Ошибка загрузки события: ' . $e->getMessage()], 500);
+            Log::error('Event show error: '.$e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+
+            return response()->json(['message' => 'Ошибка загрузки события: '.$e->getMessage()], 500);
         }
     }
-    
+
     /**
      * Статистика для карусели
      */
@@ -829,21 +842,21 @@ class EventController extends Controller
                 ->where('show_in_carousel', true)
                 ->whereDate('startDate', '>=', Carbon::now());
 
-            if (!$canEdit) {
+            if (! $canEdit) {
                 if ($this->isPastor($user) || $isMinister) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true)
-                          ->orWhere('ministers_only', true);
+                            ->orWhere('members_only', true)
+                            ->orWhere('ministers_only', true);
                     });
                 } elseif ($isMember) {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('members_only', false)
-                          ->orWhere('members_only', true);
+                            ->orWhere('members_only', true);
                     })->where('ministers_only', false);
                 } else {
                     $query->where('members_only', false)
-                          ->where('ministers_only', false);
+                        ->where('ministers_only', false);
                 }
             }
 
@@ -857,7 +870,8 @@ class EventController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Carousel stats error: ' . $e->getMessage());
+            Log::error('Carousel stats error: '.$e->getMessage());
+
             return response()->json([
                 'total' => 0,
                 'in_carousel' => 0,
@@ -866,7 +880,7 @@ class EventController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Добавить или удалить участника (кнопка «Я приду»)
      * POST - добавить, DELETE - удалить
@@ -875,82 +889,83 @@ class EventController extends Controller
     {
         try {
             $user = $request->user();
-            
-            if (!$user) {
+
+            if (! $user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Необходимо авторизоваться'
+                    'message' => 'Необходимо авторизоваться',
                 ], 401);
             }
-            
+
             $event = Event::where('slug', $slug)->firstOrFail();
-            
+
             // Проверяем, не прошло ли событие
             if ($event->isPast()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Нельзя записаться на прошедшее событие'
+                    'message' => 'Нельзя записаться на прошедшее событие',
                 ], 400);
             }
-            
+
             // Проверяем права доступа к событию
-            if (!$event->canBeViewedBy($user)) {
+            if (! $event->canBeViewedBy($user)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'У вас нет доступа к этому событию'
+                    'message' => 'У вас нет доступа к этому событию',
                 ], 403);
             }
-            
+
             $method = $request->method();
-            
+
             if ($method === 'POST') {
                 // Добавляем участника
                 if ($event->isUserAttending($user)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Вы уже записаны на это событие'
+                        'message' => 'Вы уже записаны на это событие',
                     ], 400);
                 }
-                
+
                 $event->addAttendee($user);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Вы записаны на событие',
                     'attending' => true,
-                    'attendees_count' => $event->attendees_count
+                    'attendees_count' => $event->attendees_count,
                 ]);
             }
-            
+
             if ($method === 'DELETE') {
                 // Удаляем участника
-                if (!$event->isUserAttending($user)) {
+                if (! $event->isUserAttending($user)) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Вы не записаны на это событие'
+                        'message' => 'Вы не записаны на это событие',
                     ], 400);
                 }
-                
+
                 $event->removeAttendee($user);
-                
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Вы отменили запись на событие',
                     'attending' => false,
-                    'attendees_count' => $event->attendees_count
+                    'attendees_count' => $event->attendees_count,
                 ]);
             }
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Событие не найдено'
+                'message' => 'Событие не найдено',
             ], 404);
         } catch (\Exception $e) {
-            \Log::error('Event attend error: ' . $e->getMessage());
+            \Log::error('Event attend error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка сервера'
+                'message' => 'Ошибка сервера',
             ], 500);
         }
     }
@@ -962,16 +977,16 @@ class EventController extends Controller
     {
         try {
             $event = Event::where('slug', $slug)->firstOrFail();
-            
+
             return response()->json([
                 'success' => true,
                 'attendees_count' => $event->attendees_count,
-                'event_id' => $event->id
+                'event_id' => $event->id,
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Событие не найдено'
+                'message' => 'Событие не найдено',
             ], 404);
         }
     }

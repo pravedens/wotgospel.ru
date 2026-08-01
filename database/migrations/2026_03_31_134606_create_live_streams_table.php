@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('live_streams', function (Blueprint $table) {
-             $table->id();
+            $table->id();
             $table->string('title')->nullable();
             $table->string('platform')->default('rutube');
             $table->text('embed_url')->comment('Полная ссылка для встраивания');

@@ -19,14 +19,14 @@ return new class extends Migration
             $table->foreignId('leader_id')->constrained('users')->cascadeOnDelete();
             $table->string('join_code', 10)->unique();
             $table->enum('meeting_day', [
-                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+                'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
             ])->nullable();
             $table->time('meeting_time')->nullable();
             $table->string('zoom_link', 500)->nullable();
             $table->integer('max_students')->default(30);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->index('join_code');
             $table->index('course_id');
             $table->index('leader_id');

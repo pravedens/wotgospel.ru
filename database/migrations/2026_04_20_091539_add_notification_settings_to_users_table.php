@@ -19,11 +19,11 @@ return new class extends Migration
             $table->boolean('notify_event_reminder_push')->default(false);
             $table->boolean('notify_event_day_email')->default(false);
             $table->boolean('notify_event_day_push')->default(false);
-            
+
             // Согласие на рассылку
             $table->timestamp('notification_consent_given_at')->nullable();
             $table->string('notification_consent_ip', 45)->nullable();
-            
+
             // Телефон для push-уведомлений
             $table->string('phone_for_notifications', 20)->nullable();
         });

@@ -9,7 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListEventRegistrations extends ListRecords
 {
     protected static string $resource = EventRegistrationResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

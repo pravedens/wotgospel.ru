@@ -13,7 +13,9 @@ class MessageRead implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public int $messageId;
+
     public int $conversationId;
+
     public int $readerId;
 
     public function __construct(int $messageId, int $conversationId, int $readerId)

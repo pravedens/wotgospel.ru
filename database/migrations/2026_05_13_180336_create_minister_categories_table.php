@@ -21,13 +21,13 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });
-        
+
         Schema::create('category_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->constrained('minister_categories')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->unique(['category_id', 'user_id']);
         });
     }

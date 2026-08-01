@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('policy_version')->nullable(); // Версия политики
             $table->string('ip_address')->nullable(); // IP для доп. защиты
             $table->timestamps(); // created_at будет датой согласия
-            
+
             // Индекс для быстрого поиска
             $table->index(['user_id', 'consent_type']);
         });

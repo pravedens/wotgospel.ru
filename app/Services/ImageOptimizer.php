@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Imagick\Driver;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\ImageManager;
 
 class ImageOptimizer
 {
@@ -40,15 +40,15 @@ class ImageOptimizer
     ): ?string {
         try {
             // Создаём менеджер с драйвером Imagick
-            $manager = new ImageManager(new Driver());
-            
+            $manager = new ImageManager(new Driver);
+
             // Читаем изображение
             $image = $manager->read($file->getPathname());
-            
+
             // Получаем оригинальные размеры
             $originalWidth = $image->width();
             $originalHeight = $image->height();
-            
+
             // ========== 1. МАСШТАБИРОВАНИЕ С ОБРЕЗКОЙ ==========
             if ($originalWidth <= $width && $originalHeight <= $height) {
                 // Если изображение меньше целевого размера — не увеличиваем
@@ -57,7 +57,7 @@ class ImageOptimizer
                 // Масштабируем с сохранением пропорций и обрезаем до точного размера
                 $ratio = $originalWidth / $originalHeight;
                 $targetRatio = $width / $height;
-                
+
                 if ($ratio > $targetRatio) {
                     // Слишком широкое — масштабируем по ширине
                     $image->scale(width: $width);
@@ -70,35 +70,36 @@ class ImageOptimizer
                     $image->crop(width: $width, height: $height);
                 }
             }
-            
+
             // ========== 2. КОНВЕРТАЦИЯ В WEBP ==========
             $encodedImage = $image->toWebp(quality: $quality);
-            
+
             // ========== 3. ГЕНЕРАЦИЯ УНИКАЛЬНОГО ИМЕНИ ==========
-            $filename = Str::random(40) . '.webp';
-            $fullPath = $directory . '/' . $filename;
-            
+            $filename = Str::random(40).'.webp';
+            $fullPath = $directory.'/'.$filename;
+
             // ========== 4. СОХРАНЕНИЕ В S3 (Яндекс Облако) ==========
             Storage::disk('s3')->put($fullPath, (string) $encodedImage, [
                 'visibility' => 'public',
-                'ContentType' => 'image/webp'
+                'ContentType' => 'image/webp',
             ]);
-            
+
             \Log::info('Image optimized and stored', [
                 'original_size' => $file->getSize(),
                 'original_width' => $originalWidth,
                 'original_height' => $originalHeight,
                 'final_path' => $fullPath,
-                'final_size' => strlen((string) $encodedImage)
+                'final_size' => strlen((string) $encodedImage),
             ]);
-            
+
             return $fullPath;
-            
+
         } catch (\Exception $e) {
-            \Log::error('Image optimization failed: ' . $e->getMessage(), [
+            \Log::error('Image optimization failed: '.$e->getMessage(), [
                 'file_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize()
+                'file_size' => $file->getSize(),
             ]);
+
             return null;
         }
     }

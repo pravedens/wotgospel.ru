@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BiblePartyResource/Pages/ListBibleParties.php
 
 namespace App\Filament\Resources\BiblePartyResource\Pages;
@@ -10,7 +11,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListBibleParties extends ListRecords
 {
     protected static string $resource = BiblePartyResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

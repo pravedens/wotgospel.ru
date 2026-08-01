@@ -2,14 +2,15 @@
 
 namespace App\Providers;
 
+use App\Chat\MessageSent;
+use App\Listeners\SendWebPushNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
     protected $listen = [
-        \App\Chat\MessageSent::class => [
-            \App\Listeners\SendWebPushNotification::class,
+        MessageSent::class => [
+            SendWebPushNotification::class,
         ],
     ];
 

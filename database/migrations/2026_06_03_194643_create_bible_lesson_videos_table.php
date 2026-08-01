@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bible_lesson_videos', function (Blueprint $table) {
-           $table->id();
+            $table->id();
             $table->foreignId('bible_lesson_id')->constrained('bible_lessons')->onDelete('cascade');  // ← правильное имя
             $table->string('title')->nullable();
             $table->string('url');

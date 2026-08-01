@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use BackedEnum;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -16,7 +17,6 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
 use UnitEnum;
-use BackedEnum;
 
 class UserResource extends Resource
 {
@@ -25,27 +25,28 @@ class UserResource extends Resource
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-users';
 
     protected static UnitEnum|string|null $navigationGroup = 'Администрирование';
-    
+
     protected static ?string $navigationLabel = 'Пользователи';
-    
+
     protected static ?string $breadcrumb = 'Пользователи';
-    
+
     protected static ?string $pluralModelLabel = 'Пользователи';
-    
+
     protected static ?string $recordTitleAttribute = 'name';
-    
+
     protected static ?int $navigationSort = 3;
-    
+
     public static function getNavigationBadge(): ?string
     {
         try {
             $count = static::getModel()::count();
+
             return $count > 0 ? (string) $count : null;
         } catch (\Exception $e) {
             return null;
         }
     }
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         try {
@@ -62,17 +63,16 @@ class UserResource extends Resource
                 ->label('Имя')
                 ->required()
                 ->maxLength(255),
-                
+
             TextInput::make('email')
                 ->label('Email')
                 ->email()
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(255)
-                ->afterStateUpdated(fn ($state, callable $set) => 
-                    $set('email', strtolower($state))
+                ->afterStateUpdated(fn ($state, callable $set) => $set('email', strtolower($state))
                 ),
-                
+
             TextInput::make('password')
                 ->label('Пароль')
                 ->password()
@@ -81,7 +81,7 @@ class UserResource extends Resource
                 ->dehydrateStateUsing(fn ($state) => $state ? Hash::make($state) : null)
                 ->maxLength(255)
                 ->helperText('Оставьте пустым, чтобы не менять пароль'),
-                
+
             Select::make('roles')
                 ->label('Роли')
                 ->multiple()
@@ -89,7 +89,7 @@ class UserResource extends Resource
                 ->preload()
                 ->searchable()
                 ->required(),
-                
+
             Select::make('ministerCategories')
                 ->label('Категории служения (для служителей)')
                 ->multiple()
@@ -97,7 +97,7 @@ class UserResource extends Resource
                 ->preload()
                 ->searchable()
                 ->visible(fn ($record) => $record?->hasRole('minister') ?? false),
-                
+
             DateTimePicker::make('email_verified_at')
                 ->label('Email подтверждён')
                 ->native(false)
@@ -113,17 +113,17 @@ class UserResource extends Resource
                 TextColumn::make('id')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 TextColumn::make('name')
                     ->label('Имя')
                     ->searchable()
                     ->sortable(),
-                    
+
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-                    
+
                 TextColumn::make('roles.name')
                     ->label('Роли')
                     ->badge()
@@ -134,14 +134,14 @@ class UserResource extends Resource
                         'user' => 'success',
                         default => 'gray',
                     }),
-                    
+
                 TextColumn::make('ministerCategories.name')
                     ->label('Категории служения')
                     ->badge()
                     ->listWithLineBreaks()
                     ->limitList(3)
                     ->visible(fn ($record) => $record?->hasRole('minister') ?? false),
-                    
+
                 IconColumn::make('email_verified_at')
                     ->label('Подтверждён')
                     ->boolean()
@@ -151,13 +151,13 @@ class UserResource extends Resource
                     ->falseColor('danger')
                     ->sortable()
                     ->getStateUsing(fn ($record): bool => $record->email_verified_at !== null),
-                    
+
                 TextColumn::make('created_at')
                     ->label('Создан')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 TextColumn::make('updated_at')
                     ->label('Обновлён')
                     ->dateTime('d.m.Y H:i')
@@ -170,7 +170,7 @@ class UserResource extends Resource
                     ->multiple()
                     ->relationship('roles', 'name')
                     ->preload(),
-                    
+
                 TernaryFilter::make('email_verified_at')
                     ->label('Статус верификации')
                     ->nullable()

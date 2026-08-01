@@ -12,17 +12,17 @@ class CheckStudentRole
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
-        if (!$user->isStudent() && !$user->isSuperAdmin() && !$user->isPastor() && !$user->isTeacher() && !$user->isGroupLeader()) {
+        if (! $user->isStudent() && ! $user->isSuperAdmin() && ! $user->isPastor() && ! $user->isTeacher() && ! $user->isGroupLeader()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для студентов'
+                'message' => 'Доступ только для студентов',
             ], 403);
         }
 

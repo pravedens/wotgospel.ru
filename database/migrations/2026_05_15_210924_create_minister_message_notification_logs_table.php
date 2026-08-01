@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('error_message')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['message_id', 'type', 'status']);
             $table->index(['minister_id', 'status']);
             $table->index(['channel', 'status']);

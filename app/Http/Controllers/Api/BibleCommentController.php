@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/BibleCommentController.php
 
 namespace App\Http\Controllers\Api;
@@ -21,7 +22,7 @@ class BibleCommentController extends Controller
         $comments = BibleLessonComment::where('lesson_id', $lesson->id)
             ->where('is_approved', true)
             ->whereNull('parent_id')
-            ->with(['user', 'replies' => function($query) {
+            ->with(['user', 'replies' => function ($query) {
                 $query->where('is_approved', true)->with('user');
             }])
             ->orderBy('created_at', 'desc')
@@ -29,7 +30,7 @@ class BibleCommentController extends Controller
 
         return response()->json([
             'success' => true,
-            'comments' => $comments
+            'comments' => $comments,
         ]);
     }
 
@@ -41,16 +42,16 @@ class BibleCommentController extends Controller
         $user = Auth::user();
         $lesson = BibleLesson::where('slug', $lessonSlug)->firstOrFail();
 
-        if (!$user || !$user->isEnrolledInSchool()) {
+        if (! $user || ! $user->isEnrolledInSchool()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только ученики школы могут оставлять комментарии'
+                'message' => 'Только ученики школы могут оставлять комментарии',
             ], 403);
         }
 
         $request->validate([
             'content' => 'required|string|min:3|max:5000',
-            'parent_id' => 'nullable|exists:bible_lesson_comments,id'
+            'parent_id' => 'nullable|exists:bible_lesson_comments,id',
         ]);
 
         $comment = BibleLessonComment::create([
@@ -58,13 +59,13 @@ class BibleCommentController extends Controller
             'user_id' => $user->id,
             'parent_id' => $request->parent_id,
             'content' => $request->content,
-            'is_approved' => false // Требует модерации
+            'is_approved' => false, // Требует модерации
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Комментарий отправлен на модерацию',
-            'comment' => $comment
+            'comment' => $comment,
         ]);
     }
 }

@@ -180,20 +180,20 @@ class BibleLessonResource extends Resource
                                                         ->label('Ссылка на стих')
                                                         ->required()
                                                         ->placeholder('Например: Иоанна 3:16'),
-                                                        //->debounce(500),
+                                                    // ->debounce(500),
 
                                                     Textarea::make('text')
                                                         ->label('Текст стиха')
                                                         ->required()
                                                         ->rows(3)
                                                         ->placeholder('Введите текст стиха...'),
-                                                        //->debounce(500),
+                                                    // ->debounce(500),
                                                 ]),
                                         ])
                                         ->defaultItems(1)
                                         ->addActionLabel('Добавить стих')
                                         ->reorderable()
-                                        //->live()
+                                        // ->live()
                                         ->dehydrated(false)
                                         ->afterStateHydrated(function (Repeater $component, ?array $state, ?BibleLesson $record): void {
                                             if (! $record || blank($record->scripture_verses)) {
@@ -405,7 +405,7 @@ class BibleLessonResource extends Resource
             $text = trim($item['text'] ?? '');
 
             if ($reference && $text) {
-                $textsArray[] = $reference . "\n" . $text;
+                $textsArray[] = $reference."\n".$text;
             }
         }
 

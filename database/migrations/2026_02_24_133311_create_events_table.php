@@ -11,21 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->string('slug')->unique();
-            $table->date('startDate')->nullable();
-            $table->text('startWeek')->nullable();
-            $table->text('startDay')->nullable();
-            $table->text('startMonth')->nullable();
-            $table->time('startTime')->nullable();
-            $table->text('description');
-            $table->text('content');
-            $table->string('thumbnail')->nullable();
-            $table->timestamps();
-            $table->text('info')->nullable();
-        });
+        if (! Schema::hasTable('events')) {
+            Schema::create('events', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->string('slug')->unique();
+                $table->date('startDate')->nullable();
+                $table->text('startWeek')->nullable();
+                $table->text('startDay')->nullable();
+                $table->text('startMonth')->nullable();
+                $table->time('startTime')->nullable();
+                $table->text('description');
+                $table->text('content');
+                $table->string('thumbnail')->nullable();
+                $table->timestamps();
+                $table->text('info')->nullable();
+            });
+        }
     }
 
     /**

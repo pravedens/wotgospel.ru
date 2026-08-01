@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/BibleCertificate.php
 
 namespace App\Models;
@@ -10,7 +11,7 @@ use Illuminate\Support\Str;
 class BibleCertificate extends Model
 {
     protected $table = 'bible_certificates';
-    
+
     protected $fillable = [
         'user_id',
         'course_id',
@@ -19,11 +20,11 @@ class BibleCertificate extends Model
         'pdf_url',
         'issued_at',
     ];
-    
+
     protected $casts = [
         'issued_at' => 'datetime',
     ];
-    
+
     protected static function booted()
     {
         static::creating(function ($certificate) {
@@ -32,19 +33,19 @@ class BibleCertificate extends Model
             }
         });
     }
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(BibleCourse::class, 'course_id');
     }
-    
+
     public function getVerificationUrl(): string
     {
-        return config('app.frontend_url') . '/certificate/verify/' . $this->certificate_uuid;
+        return config('app.frontend_url').'/certificate/verify/'.$this->certificate_uuid;
     }
 }

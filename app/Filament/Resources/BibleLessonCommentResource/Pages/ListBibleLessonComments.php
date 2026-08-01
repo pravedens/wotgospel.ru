@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BibleLessonCommentResource/Pages/ListBibleLessonComments.php
 
 namespace App\Filament\Resources\BibleLessonCommentResource\Pages;
@@ -10,7 +11,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListBibleLessonComments extends ListRecords
 {
     protected static string $resource = BibleLessonCommentResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

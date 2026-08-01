@@ -147,13 +147,14 @@ class BibleVersesSeeder extends Seeder
                 if (isset($data['versos'])) {
                     $verses = [];
                     foreach ($data['versos'] as $verse) {
-                        $verses[(int)$verse['numero']] = $verse['texto'];
+                        $verses[(int) $verse['numero']] = $verse['texto'];
                     }
+
                     return $verses;
                 }
             }
         } catch (\Exception $e) {
-            $this->command->warn("Ошибка загрузки книги {$bookId}, главы {$chapter}: " . $e->getMessage());
+            $this->command->warn("Ошибка загрузки книги {$bookId}, главы {$chapter}: ".$e->getMessage());
         }
 
         return [];
@@ -185,6 +186,6 @@ class BibleVersesSeeder extends Seeder
             'Откровение' => 'Откр.',
         ];
 
-        return $abbreviations[$bookName] ?? substr($bookName, 0, 3) . '.';
+        return $abbreviations[$bookName] ?? substr($bookName, 0, 3).'.';
     }
 }

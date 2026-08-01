@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/BibleLessonController.php
 
 namespace App\Http\Controllers\Api;
@@ -6,10 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BibleLesson;
 use App\Models\BibleUserLessonProgress;
-use App\Models\BibleLessonComment;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;  // ✅ ПРАВИЛЬНОЕ МЕСТО — ВНЕ КЛАССА
+use Illuminate\Support\Facades\Auth;  // ✅ ПРАВИЛЬНОЕ МЕСТО — ВНЕ КЛАССА
 
 class BibleLessonController extends Controller
 {
@@ -25,10 +25,10 @@ class BibleLessonController extends Controller
 
         $user = Auth::user();
 
-        if (!$user || !$user->isEnrolledInSchool()) {
+        if (! $user || ! $user->isEnrolledInSchool()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для учеников школы'
+                'message' => 'Доступ только для учеников школы',
             ], 403);
         }
 
@@ -37,16 +37,16 @@ class BibleLessonController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Этот урок заблокирован. Пройдите предыдущий урок.',
-                'is_locked' => true
+                'is_locked' => true,
             ], 403);
         }
 
         // Получаем прогресс пользователя
         $progress = BibleUserLessonProgress::firstOrCreate([
             'user_id' => $user->id,
-            'lesson_id' => $lesson->id
+            'lesson_id' => $lesson->id,
         ], [
-            'status' => 'not_started'
+            'status' => 'not_started',
         ]);
 
         // Для лидера группы проверяем посещаемость
@@ -69,17 +69,17 @@ class BibleLessonController extends Controller
                 'slug' => $lesson->slug,
                 'course_slug' => $lesson->course->slug,
                 'call_question' => $lesson->call_question,
-                'call_answer' => $lesson->call_answer, 
+                'call_answer' => $lesson->call_answer,
                 'scripture_verses' => $lesson->scripture_verses,
                 'content' => $lesson->content,
                 'practice_task' => $lesson->practice_task,
-'videos' => $lesson->videos->map(fn($v) => [
-                'id' => $v->id,
-                'title' => $v->title,
-                'embed_url' => $v->embed_url,
-                'platform' => $v->platform,
-                'order' => $v->order,
-            ]),
+                'videos' => $lesson->videos->map(fn ($v) => [
+                    'id' => $v->id,
+                    'title' => $v->title,
+                    'embed_url' => $v->embed_url,
+                    'platform' => $v->platform,
+                    'order' => $v->order,
+                ]),
                 'pdf_conspect_url' => $lesson->pdf_conspect_url,
             ],
             'progress' => [
@@ -89,10 +89,10 @@ class BibleLessonController extends Controller
                 'test_passed_at' => $progress->test_passed_at,
                 'test_score' => $progress->test_score,
                 'attended_by_leader_at' => $progress->attended_by_leader_at,
-                'is_attended' => $isAttended
+                'is_attended' => $isAttended,
             ],
             'comments' => $comments,
-            'is_locked' => false
+            'is_locked' => false,
         ]);
     }
 
@@ -139,10 +139,10 @@ class BibleLessonController extends Controller
 
         $user = Auth::user();
 
-        if (!$user || !$user->isEnrolledInSchool()) {
+        if (! $user || ! $user->isEnrolledInSchool()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для учеников школы'
+                'message' => 'Доступ только для учеников школы',
             ], 403);
         }
 
@@ -150,13 +150,13 @@ class BibleLessonController extends Controller
         if ($this->isLessonLocked($lesson, $user->id)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Этот урок заблокирован'
+                'message' => 'Этот урок заблокирован',
             ], 403);
         }
 
         $progress = BibleUserLessonProgress::firstOrCreate([
             'user_id' => $user->id,
-            'lesson_id' => $lesson->id
+            'lesson_id' => $lesson->id,
         ]);
 
         $progress->$method();
@@ -164,7 +164,7 @@ class BibleLessonController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Прогресс обновлён',
-            'status' => $progress->status
+            'status' => $progress->status,
         ]);
     }
 
@@ -174,50 +174,51 @@ class BibleLessonController extends Controller
     public function downloadPdf($slug)
     {
         $user = Auth::user();
-        
-        if (!$user || !$user->isEnrolledInSchool()) {
+
+        if (! $user || ! $user->isEnrolledInSchool()) {
             abort(403, 'Доступ запрещён');
         }
-        
+
         $lesson = BibleLesson::where('slug', $slug)->firstOrFail();
-        
+
         // Заменяем относительные пути картинок на полные S3 URL
         $content = $lesson->content;
-        $content = preg_replace_callback('/<img[^>]+src=["\']([^"\']+)["\']/i', function($matches) {
+        $content = preg_replace_callback('/<img[^>]+src=["\']([^"\']+)["\']/i', function ($matches) {
             $src = $matches[1];
-            
+
             // Если уже полный URL
             if (preg_match('/^https?:\/\//', $src)) {
                 // Если это S3, оставляем как есть
                 if (str_contains($src, 'storage.yandexcloud.net')) {
                     return $matches[0];
                 }
+
                 return $matches[0];
             }
-            
+
             // Формируем полный S3 URL
             $cleanPath = ltrim($src, '/');
-            $fullUrl = 'https://storage.yandexcloud.net/wotgospel-media/' . $cleanPath;
-            
+            $fullUrl = 'https://storage.yandexcloud.net/wotgospel-media/'.$cleanPath;
+
             return str_replace($matches[1], $fullUrl, $matches[0]);
         }, $content);
-        
+
         $html = view('pdf.lesson', [
             'lesson' => $lesson,
             'user' => $user,
-            'content' => $content
+            'content' => $content,
         ])->render();
-        
+
         $pdf = Pdf::loadHTML($html);
         $pdf->setPaper('a4', 'portrait');
-        
+
         // Включаем загрузку внешних изображений
         $pdf->getOptions()->set('isRemoteEnabled', true);
         $pdf->getOptions()->set('isHtml5ParserEnabled', true);
-        
+
         return $pdf->download("lesson-{$lesson->slug}.pdf");
     }
-    
+
     /**
      * Проверка блокировки урока
      */
@@ -227,53 +228,53 @@ class BibleLessonController extends Controller
         if ($lesson->order == 1) {
             return false;
         }
-        
+
         $previousLesson = $lesson->getPreviousLesson();
-        
-        if (!$previousLesson) {
+
+        if (! $previousLesson) {
             return false;
         }
-        
+
         // Получаем прогресс предыдущего урока
         $progress = BibleUserLessonProgress::where('user_id', $userId)
             ->where('lesson_id', $previousLesson->id)
             ->first();
-        
+
         // Урок заблокирован, если нет прогресса или предыдущий урок не пройден
-        if (!$progress) {
+        if (! $progress) {
             return true;
         }
-        
+
         // Проверяем статус предыдущего урока
         $isCompleted = ($progress->status === 'test_passed' || $progress->status === 'completed');
-        
-        return !$isCompleted;
+
+        return ! $isCompleted;
     }
-    
+
     /**
- * Получить следующий урок
- */
-public function getNextLesson($slug)
-{
-    $user = Auth::user();
-    
-    if (!$user || !$user->isStudent()) {
-        return response()->json(['success' => false, 'message' => 'Доступ запрещён'], 403);
+     * Получить следующий урок
+     */
+    public function getNextLesson($slug)
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->isStudent()) {
+            return response()->json(['success' => false, 'message' => 'Доступ запрещён'], 403);
+        }
+
+        $currentLesson = BibleLesson::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
+
+        $nextLesson = $currentLesson->getNextLesson();
+
+        return response()->json([
+            'success' => true,
+            'next_lesson' => $nextLesson ? [
+                'id' => $nextLesson->id,
+                'title' => $nextLesson->title,
+                'slug' => $nextLesson->slug,
+            ] : null,
+        ]);
     }
-    
-    $currentLesson = BibleLesson::where('slug', $slug)
-        ->where('is_published', true)
-        ->firstOrFail();
-    
-    $nextLesson = $currentLesson->getNextLesson();
-    
-    return response()->json([
-        'success' => true,
-        'next_lesson' => $nextLesson ? [
-            'id' => $nextLesson->id,
-            'title' => $nextLesson->title,
-            'slug' => $nextLesson->slug,
-        ] : null,
-    ]);
-}
 }

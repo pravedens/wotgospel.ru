@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
+use App\Chat\ConversationCreated;
+use App\Chat\MessageSent;
+use App\Chat\SendMessageNotifications;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
-use App\Chat\MessageSent;
-use App\Chat\ConversationCreated;
-use App\Chat\SendMessageNotifications;
 use Illuminate\Support\Facades\DB;
-use App\Services\CensorService;
 
 class ChatService
 {
@@ -61,7 +60,7 @@ class ChatService
     {
         $conversation = Conversation::findOrFail($conversationId);
 
-        if (!$conversation->hasUser($userId)) {
+        if (! $conversation->hasUser($userId)) {
             throw new \Exception('Вы не участник этой беседы');
         }
 
@@ -118,7 +117,7 @@ class ChatService
         // Роли с правом отправлять сообщения
         $allowedRoles = ['super_admin', 'pastor', 'admin', 'teacher', 'group_leader', 'student'];
 
-        if (!in_array($senderRole, $allowedRoles)) {
+        if (! in_array($senderRole, $allowedRoles)) {
             throw new \Exception('У вас нет прав для отправки сообщений');
         }
 
@@ -129,7 +128,7 @@ class ChatService
 
         // Если у пользователя нет роли teacher, student, group_leader — запрещаем
         $senderSchoolRoles = ['teacher', 'student', 'group_leader', 'pastor', 'admin', 'super_admin'];
-        if (!in_array($senderRole, $senderSchoolRoles)) {
+        if (! in_array($senderRole, $senderSchoolRoles)) {
             throw new \Exception('У вас нет прав для отправки сообщений');
         }
 

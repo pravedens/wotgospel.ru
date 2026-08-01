@@ -10,6 +10,7 @@ class NewMessageNotification extends Notification
     use Queueable;
 
     protected string $senderName;
+
     protected string $messageText;
 
     public function __construct(string $senderName, string $messageText)

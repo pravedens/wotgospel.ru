@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::table('events', function (Blueprint $table) {
             // Сначала добавляем поле endDate, если его нет
-            if (!Schema::hasColumn('events', 'endDate')) {
+            if (! Schema::hasColumn('events', 'endDate')) {
                 $table->dateTime('endDate')->nullable()->after('startDate');
             }
-            
+
             // Добавляем поля для повторяющихся событий
-            if (!Schema::hasColumn('events', 'recurring_type')) {
+            if (! Schema::hasColumn('events', 'recurring_type')) {
                 $table->string('recurring_type')->nullable()->after('color')
-                      ->comment('Тип повторения: daily, weekly, monthly, yearly');
+                    ->comment('Тип повторения: daily, weekly, monthly, yearly');
             }
-            
-            if (!Schema::hasColumn('events', 'recurring_until')) {
+
+            if (! Schema::hasColumn('events', 'recurring_until')) {
                 $table->dateTime('recurring_until')->nullable()->after('recurring_type')
-                      ->comment('Дата окончания повторений');
+                    ->comment('Дата окончания повторений');
             }
         });
     }

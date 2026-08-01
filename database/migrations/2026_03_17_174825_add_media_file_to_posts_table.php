@@ -26,7 +26,7 @@ return new class extends Migration
     {
         Schema::table('posts', function (Blueprint $table) {
             $table->dropColumn([
-                'audio_file', 'audio_filename', 'audio_size', 'audio_mime'
+                'audio_file', 'audio_filename', 'audio_size', 'audio_mime',
             ]);
         });
     }

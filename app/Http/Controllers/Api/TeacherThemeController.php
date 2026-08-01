@@ -4,11 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BibleTheme;
-use App\Models\BibleCourse;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 
 class TeacherThemeController extends Controller
 {
@@ -18,6 +15,7 @@ class TeacherThemeController extends Controller
     public function index()
     {
         $themes = BibleTheme::with('course', 'teacher')->orderBy('course_id')->orderBy('order')->get();
+
         return response()->json(['themes' => $themes]);
     }
 
@@ -36,16 +34,17 @@ class TeacherThemeController extends Controller
         ]);
 
         $data['slug'] = Str::slug($data['title']);
-        
+
         // Проверка уникальности slug в рамках курса
         $existing = BibleTheme::where('course_id', $data['course_id'])
             ->where('slug', $data['slug'])
             ->first();
         if ($existing) {
-            $data['slug'] = $data['slug'] . '-' . time();
+            $data['slug'] = $data['slug'].'-'.time();
         }
 
         $theme = BibleTheme::create($data);
+
         return response()->json(['theme' => $theme], 201);
     }
 
@@ -55,6 +54,7 @@ class TeacherThemeController extends Controller
     public function show($id)
     {
         $theme = BibleTheme::with(['course', 'teacher', 'lessons'])->findOrFail($id);
+
         return response()->json(['theme' => $theme]);
     }
 
@@ -82,11 +82,12 @@ class TeacherThemeController extends Controller
                 ->where('id', '!=', $id)
                 ->first();
             if ($existing) {
-                $data['slug'] = $data['slug'] . '-' . time();
+                $data['slug'] = $data['slug'].'-'.time();
             }
         }
 
         $theme->update($data);
+
         return response()->json(['theme' => $theme]);
     }
 
@@ -96,15 +97,16 @@ class TeacherThemeController extends Controller
     public function destroy($id)
     {
         $theme = BibleTheme::findOrFail($id);
-        
+
         // Проверяем, есть ли уроки в этой теме
         if ($theme->lessons()->count() > 0) {
             return response()->json([
-                'message' => 'Невозможно удалить тему, в ней есть уроки. Сначала удалите или переместите уроки.'
+                'message' => 'Невозможно удалить тему, в ней есть уроки. Сначала удалите или переместите уроки.',
             ], 422);
         }
-        
+
         $theme->delete();
+
         return response()->json(['message' => 'Тема удалена']);
     }
 
@@ -114,8 +116,9 @@ class TeacherThemeController extends Controller
     public function togglePublish($id)
     {
         $theme = BibleTheme::findOrFail($id);
-        $theme->is_published = !$theme->is_published;
+        $theme->is_published = ! $theme->is_published;
         $theme->save();
+
         return response()->json(['theme' => $theme]);
     }
 }

@@ -11,11 +11,11 @@ class SendWebPushNotification
     public function handle(MessageSent $event): void
     {
         $receiver = User::find($event->message->receiver_id);
-        if (!$receiver) {
+        if (! $receiver) {
             return;
         }
 
-        if (!$receiver->pushSubscriptions()->exists()) {
+        if (! $receiver->pushSubscriptions()->exists()) {
             return;
         }
 

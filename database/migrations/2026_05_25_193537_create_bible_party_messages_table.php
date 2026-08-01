@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            
+
             $table->index(['party_id', 'created_at']);
             $table->index('is_approved');
             $table->index('user_id');

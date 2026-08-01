@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BibleEnrollmentRequestResource/Pages/ListBibleEnrollmentRequests.php
 
 namespace App\Filament\Resources\BibleEnrollmentRequestResource\Pages;
@@ -10,7 +11,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListBibleEnrollmentRequests extends ListRecords
 {
     protected static string $resource = BibleEnrollmentRequestResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

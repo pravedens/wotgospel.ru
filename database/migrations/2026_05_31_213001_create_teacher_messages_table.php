@@ -23,23 +23,23 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamps();
-            
+
             // Индексы
             $table->index('teacher_id');
             $table->index('user_id');
             $table->index('is_read');
             $table->index('created_at');
-            
+
             // Внешние ключи
             $table->foreign('teacher_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
-                  
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('set null');
+                ->references('id')
+                ->on('users')
+                ->onDelete('set null');
         });
     }
 

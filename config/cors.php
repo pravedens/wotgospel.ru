@@ -18,8 +18,9 @@ return [
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
+        'login',
+        'logout',
     ],
-
 
     'allowed_methods' => ['*'],
 
@@ -27,6 +28,7 @@ return [
         'https://wotnt.ru',
         'https://www.wotnt.ru',
         'http://localhost:3000',
+        'http://127.0.0.1:3000',
     ],
 
     'allowed_origins_patterns' => [],
@@ -35,8 +37,8 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
-    'supports_credentials' => false, // Для токенов не нужны куки
+    'supports_credentials' => true, // Для токенов не нужны куки
 
 ];

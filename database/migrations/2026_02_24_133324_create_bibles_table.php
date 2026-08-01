@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bibles', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->string('slug')->unique();
-            $table->text('description');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('bibles')) {
+            Schema::create('bibles', function (Blueprint $table) {
+                $table->id();
+                $table->string('title');
+                $table->string('slug')->unique();
+                $table->text('description');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

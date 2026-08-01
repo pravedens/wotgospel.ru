@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Denomination extends Model
 {
     use HasFactory;
-     
+
     protected $guarded = [];
-    
+
     public function about(): HasMany
     {
         return $this->hasMany(About::class);

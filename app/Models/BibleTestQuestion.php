@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/BibleTestQuestion.php
 
 namespace App\Models;
@@ -138,44 +139,44 @@ class BibleTestQuestion extends Model
     }
 
     protected function validateOrdering($answer): array
-{
-    $config = $this->config ?? [];
-    
-    // ✅ Если config строка — декодируем в массив
-    if (is_string($config)) {
-        $config = json_decode($config, true);
+    {
+        $config = $this->config ?? [];
+
+        // ✅ Если config строка — декодируем в массив
+        if (is_string($config)) {
+            $config = json_decode($config, true);
+        }
+
+        if (! is_array($config)) {
+            $config = [];
+        }
+
+        $items = $config['items'] ?? [];
+
+        if (! is_array($answer)) {
+            $answer = [$answer];
+        }
+
+        $correctOrder = collect($items)
+            ->sortBy('correct_order')
+            ->pluck('text')
+            ->map(fn ($value) => trim((string) $value))
+            ->values()
+            ->toArray();
+
+        $userOrder = collect($answer)
+            ->map(fn ($value) => trim((string) $value))
+            ->values()
+            ->toArray();
+
+        $correct = $userOrder === $correctOrder;
+
+        return [
+            'correct' => $correct,
+            'score' => $correct ? $this->points : 0,
+            'feedback' => $correct ? null : 'Порядок элементов неверен',
+        ];
     }
-    
-    if (!is_array($config)) {
-        $config = [];
-    }
-    
-    $items = $config['items'] ?? [];
-
-    if (!is_array($answer)) {
-        $answer = [$answer];
-    }
-
-    $correctOrder = collect($items)
-        ->sortBy('correct_order')
-        ->pluck('text')
-        ->map(fn ($value) => trim((string) $value))
-        ->values()
-        ->toArray();
-
-    $userOrder = collect($answer)
-        ->map(fn ($value) => trim((string) $value))
-        ->values()
-        ->toArray();
-
-    $correct = $userOrder === $correctOrder;
-
-    return [
-        'correct' => $correct,
-        'score' => $correct ? $this->points : 0,
-        'feedback' => $correct ? null : 'Порядок элементов неверен',
-    ];
-}
 
     protected function validateOddOneOut($answer): array
     {
@@ -192,149 +193,152 @@ class BibleTestQuestion extends Model
     }
 
     protected function validateVerseReference($answer): array
-{
-    \Log::info('=== validateVerseReference ===', [
-        'answer' => $answer,
-        'config' => $this->config
-    ]);
+    {
+        \Log::info('=== validateVerseReference ===', [
+            'answer' => $answer,
+            'config' => $this->config,
+        ]);
 
-    $parsed = $this->parseVerseReference((string) $answer);
-    
-    \Log::info('Parsed result:', $parsed ?? ['null']);
-    
-    if (! $parsed) {
+        $parsed = $this->parseVerseReference((string) $answer);
+
+        \Log::info('Parsed result:', $parsed ?? ['null']);
+
+        if (! $parsed) {
+            return [
+                'correct' => false,
+                'score' => 0,
+                'feedback' => 'Введите ссылку в формате "Книга глава:стих" (например, Ин. 3:16)',
+            ];
+        }
+
+        $expectedBook = (string) ($this->config['expected_book'] ?? '');
+        $expectedChapter = $this->config['expected_chapter'] ?? null;
+        $expectedVerse = $this->config['expected_verse'] ?? null;
+
+        \Log::info('Expected:', [
+            'book' => $expectedBook,
+            'chapter' => $expectedChapter,
+            'verse' => $expectedVerse,
+        ]);
+
+        $acceptAlternativeNotations = (bool) ($this->config['accept_alternative_notations'] ?? true);
+
+        if ($acceptAlternativeNotations) {
+            $normalizedParsedBook = $this->normalizeBibleBookName($parsed['book']);
+            $normalizedExpectedBook = $this->normalizeBibleBookName($expectedBook);
+
+            \Log::info('Normalized books:', [
+                'parsed' => $normalizedParsedBook,
+                'expected' => $normalizedExpectedBook,
+            ]);
+
+            $bookMatch = $normalizedParsedBook === $normalizedExpectedBook;
+        } else {
+            $bookMatch = mb_strtolower(trim($parsed['book'])) === mb_strtolower(trim($expectedBook));
+        }
+
+        $chapterMatch = (int) $parsed['chapter'] === (int) $expectedChapter;
+        $verseMatch = (int) $parsed['verse'] === (int) $expectedVerse;
+
+        \Log::info('Matches:', [
+            'bookMatch' => $bookMatch,
+            'chapterMatch' => $chapterMatch,
+            'verseMatch' => $verseMatch,
+        ]);
+
+        $correct = $bookMatch && $chapterMatch && $verseMatch;
+
         return [
-            'correct' => false,
-            'score' => 0,
-            'feedback' => 'Введите ссылку в формате "Книга глава:стих" (например, Ин. 3:16)',
+            'correct' => $correct,
+            'score' => $correct ? $this->points : 0,
+            'feedback' => $correct ? null : "Ожидалось: {$expectedBook} {$expectedChapter}:{$expectedVerse}",
         ];
     }
-
-    $expectedBook = (string) ($this->config['expected_book'] ?? '');
-    $expectedChapter = $this->config['expected_chapter'] ?? null;
-    $expectedVerse = $this->config['expected_verse'] ?? null;
-    
-    \Log::info('Expected:', [
-        'book' => $expectedBook,
-        'chapter' => $expectedChapter,
-        'verse' => $expectedVerse
-    ]);
-
-    $acceptAlternativeNotations = (bool) ($this->config['accept_alternative_notations'] ?? true);
-
-    if ($acceptAlternativeNotations) {
-        $normalizedParsedBook = $this->normalizeBibleBookName($parsed['book']);
-        $normalizedExpectedBook = $this->normalizeBibleBookName($expectedBook);
-        
-        \Log::info('Normalized books:', [
-            'parsed' => $normalizedParsedBook,
-            'expected' => $normalizedExpectedBook
-        ]);
-        
-        $bookMatch = $normalizedParsedBook === $normalizedExpectedBook;
-    } else {
-        $bookMatch = mb_strtolower(trim($parsed['book'])) === mb_strtolower(trim($expectedBook));
-    }
-
-    $chapterMatch = (int) $parsed['chapter'] === (int) $expectedChapter;
-    $verseMatch = (int) $parsed['verse'] === (int) $expectedVerse;
-    
-    \Log::info('Matches:', [
-        'bookMatch' => $bookMatch,
-        'chapterMatch' => $chapterMatch,
-        'verseMatch' => $verseMatch
-    ]);
-
-    $correct = $bookMatch && $chapterMatch && $verseMatch;
-
-    return [
-        'correct' => $correct,
-        'score' => $correct ? $this->points : 0,
-        'feedback' => $correct ? null : "Ожидалось: {$expectedBook} {$expectedChapter}:{$expectedVerse}",
-    ];
-}
 
     protected function parseVerseReference(string $reference): ?array
-{
-    \Log::info('Parsing reference:', ['original' => $reference]);
-    
-    $reference = trim($reference);
-    $reference = preg_replace('/\s+/u', ' ', $reference);
-    
-    // Паттерн для форматов: Ин. 3:16, Иоанна 3:16, 1 Кор. 13:4
-    $pattern = '/^([\pL\s\.0-9]+?)\s*(\d+):(\d+)$/u';
-    
-    if (preg_match($pattern, $reference, $matches)) {
-        \Log::info('Pattern matched:', $matches);
-        return [
-            'book' => trim($matches[1]),
-            'chapter' => (int) $matches[2],
-            'verse' => (int) $matches[3],
-        ];
+    {
+        \Log::info('Parsing reference:', ['original' => $reference]);
+
+        $reference = trim($reference);
+        $reference = preg_replace('/\s+/u', ' ', $reference);
+
+        // Паттерн для форматов: Ин. 3:16, Иоанна 3:16, 1 Кор. 13:4
+        $pattern = '/^([\pL\s\.0-9]+?)\s*(\d+):(\d+)$/u';
+
+        if (preg_match($pattern, $reference, $matches)) {
+            \Log::info('Pattern matched:', $matches);
+
+            return [
+                'book' => trim($matches[1]),
+                'chapter' => (int) $matches[2],
+                'verse' => (int) $matches[3],
+            ];
+        }
+
+        // Альтернативный паттерн для форматов без пробела: 1Ин. 3:16
+        $pattern2 = '/^([\pL\.0-9]+?)(\d+):(\d+)$/u';
+        if (preg_match($pattern2, $reference, $matches)) {
+            \Log::info('Pattern2 matched:', $matches);
+
+            return [
+                'book' => trim($matches[1]),
+                'chapter' => (int) $matches[2],
+                'verse' => (int) $matches[3],
+            ];
+        }
+
+        \Log::warning('No pattern matched');
+
+        return null;
     }
-    
-    // Альтернативный паттерн для форматов без пробела: 1Ин. 3:16
-    $pattern2 = '/^([\pL\.0-9]+?)(\d+):(\d+)$/u';
-    if (preg_match($pattern2, $reference, $matches)) {
-        \Log::info('Pattern2 matched:', $matches);
-        return [
-            'book' => trim($matches[1]),
-            'chapter' => (int) $matches[2],
-            'verse' => (int) $matches[3],
-        ];
-    }
-    
-    \Log::warning('No pattern matched');
-    return null;
-}
 
     protected function normalizeBibleBookName(string $book): string
-{
-    $original = $book;
-    $book = mb_strtolower(trim($book));
-    $book = str_replace('.', '', $book);
-    $book = preg_replace('/\s+/u', ' ', $book);
-    
-    \Log::info('Normalizing book:', ['original' => $original, 'after' => $book]);
+    {
+        $original = $book;
+        $book = mb_strtolower(trim($book));
+        $book = str_replace('.', '', $book);
+        $book = preg_replace('/\s+/u', ' ', $book);
 
-    $aliases = [
-        'ин' => 'иоанна',
-        'иоан' => 'иоанна',
-        'иоанна' => 'иоанна',
-        '1 ин' => '1 иоанна',
-        '1ин' => '1 иоанна',  // ← добавить для поддержки без пробела
-        '2 ин' => '2 иоанна',
-        '2ин' => '2 иоанна',
-        '3 ин' => '3 иоанна',
-        '3ин' => '3 иоанна',
-        'мф' => 'матфея',
-        'матф' => 'матфея',
-        'матфея' => 'матфея',
-        'мк' => 'марка',
-        'мар' => 'марка',
-        'марка' => 'марка',
-        'лк' => 'луки',
-        'лук' => 'луки',
-        'луки' => 'луки',
-        '1 кор' => '1 коринфянам',
-        '1кор' => '1 коринфянам',
-        '2 кор' => '2 коринфянам',
-        '2кор' => '2 коринфянам',
-        '1 тим' => '1 тимофею',
-        '1тим' => '1 тимофею',
-        '2 тим' => '2 тимофею',
-        '2тим' => '2 тимофею',
-        '1 пет' => '1 петра',
-        '1пет' => '1 петра',
-        '2 пет' => '2 петра',
-        '2пет' => '2 петра',
-    ];
+        \Log::info('Normalizing book:', ['original' => $original, 'after' => $book]);
 
-    $result = $aliases[$book] ?? $book;
-    \Log::info('Normalized result:', ['result' => $result]);
-    
-    return $result;
-}
+        $aliases = [
+            'ин' => 'иоанна',
+            'иоан' => 'иоанна',
+            'иоанна' => 'иоанна',
+            '1 ин' => '1 иоанна',
+            '1ин' => '1 иоанна',  // ← добавить для поддержки без пробела
+            '2 ин' => '2 иоанна',
+            '2ин' => '2 иоанна',
+            '3 ин' => '3 иоанна',
+            '3ин' => '3 иоанна',
+            'мф' => 'матфея',
+            'матф' => 'матфея',
+            'матфея' => 'матфея',
+            'мк' => 'марка',
+            'мар' => 'марка',
+            'марка' => 'марка',
+            'лк' => 'луки',
+            'лук' => 'луки',
+            'луки' => 'луки',
+            '1 кор' => '1 коринфянам',
+            '1кор' => '1 коринфянам',
+            '2 кор' => '2 коринфянам',
+            '2кор' => '2 коринфянам',
+            '1 тим' => '1 тимофею',
+            '1тим' => '1 тимофею',
+            '2 тим' => '2 тимофею',
+            '2тим' => '2 тимофею',
+            '1 пет' => '1 петра',
+            '1пет' => '1 петра',
+            '2 пет' => '2 петра',
+            '2пет' => '2 петра',
+        ];
+
+        $result = $aliases[$book] ?? $book;
+        \Log::info('Normalized result:', ['result' => $result]);
+
+        return $result;
+    }
 
     protected function validateSelectVerse($answer): array
     {
@@ -351,27 +355,27 @@ class BibleTestQuestion extends Model
     }
 
     protected function validateTrueFalse($answer): array
-{
-    $config = $this->config ?? [];
-    
-    // ✅ Если config строка — декодируем в массив
-    if (is_string($config)) {
-        $config = json_decode($config, true);
-    }
-    
-    if (!is_array($config)) {
-        $config = [];
-    }
+    {
+        $config = $this->config ?? [];
 
-    $correct = array_key_exists('correct', $config)
-        && (bool) $answer === (bool) ($config['correct'] ?? false);
+        // ✅ Если config строка — декодируем в массив
+        if (is_string($config)) {
+            $config = json_decode($config, true);
+        }
 
-    return [
-        'correct' => $correct,
-        'score' => $correct ? $this->points : 0,
-        'feedback' => $correct ? null : ($config['explanation'] ?? 'Неверно'),
-    ];
-}
+        if (! is_array($config)) {
+            $config = [];
+        }
+
+        $correct = array_key_exists('correct', $config)
+            && (bool) $answer === (bool) ($config['correct'] ?? false);
+
+        return [
+            'correct' => $correct,
+            'score' => $correct ? $this->points : 0,
+            'feedback' => $correct ? null : ($config['explanation'] ?? 'Неверно'),
+        ];
+    }
 
     protected function validateFillBlank($answer): array
     {

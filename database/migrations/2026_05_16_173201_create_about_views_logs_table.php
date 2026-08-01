@@ -18,10 +18,10 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->date('viewed_at');
             $table->timestamps();
-            
+
             // Уникальная комбинация: статья + IP + дата
             $table->unique(['about_id', 'ip_address', 'viewed_at'], 'about_views_unique');
-            
+
             // Просто индекс вместо внешнего ключа
             $table->index('about_id');
         });

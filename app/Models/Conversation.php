@@ -69,6 +69,7 @@ class Conversation extends Model
         if ($this->user2_id === $userId) {
             return $this->user1;
         }
+
         return null;
     }
 
@@ -91,7 +92,7 @@ class Conversation extends Model
             ->where('is_read', false)
             ->update([
                 'is_read' => true,
-                'read_at' => now()
+                'read_at' => now(),
             ]);
     }
 
@@ -125,7 +126,7 @@ class Conversation extends Model
     {
         $conversation = self::betweenUsers($user1Id, $user2Id)->first();
 
-        if (!$conversation) {
+        if (! $conversation) {
             $conversation = self::create([
                 'user1_id' => min($user1Id, $user2Id),
                 'user2_id' => max($user1Id, $user2Id),

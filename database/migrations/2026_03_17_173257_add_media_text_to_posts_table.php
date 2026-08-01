@@ -26,7 +26,7 @@ return new class extends Migration
     {
         Schema::table('posts', function (Blueprint $table) {
             $table->dropColumn([
-                'text_file', 'text_filename', 'text_size', 'text_mime'
+                'text_file', 'text_filename', 'text_size', 'text_mime',
             ]);
         });
     }

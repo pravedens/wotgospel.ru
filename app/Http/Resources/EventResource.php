@@ -16,7 +16,7 @@ class EventResource extends JsonResource
             'description' => $this->description,
             'content' => $this->content,
             'info' => $this->info,
-            'thumbnail' => $this->thumbnail ? url('/storage/' . $this->thumbnail) : null,
+            'thumbnail' => $this->thumbnail ? url('/storage/'.$this->thumbnail) : null,
             'startDate' => $this->startDate,
             'startTime' => $this->startTime,
             'startWeek' => $this->startWeek,

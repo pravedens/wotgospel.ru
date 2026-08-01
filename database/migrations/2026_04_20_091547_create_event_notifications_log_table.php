@@ -21,17 +21,17 @@ return new class extends Migration
             $table->string('status', 20)->default('pending');
             $table->text('error_message')->nullable();
             $table->timestamps();
-            
+
             // Индексы
             $table->index(['user_id', 'event_id', 'type']);
             $table->index('status');
             $table->index('created_at');
-            
+
             // ✅ ТОЛЬКО внешний ключ на user_id
             $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
         });
     }
 

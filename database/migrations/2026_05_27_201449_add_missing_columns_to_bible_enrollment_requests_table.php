@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bible_enrollment_requests', function (Blueprint $table) {
-            if (!Schema::hasColumn('bible_enrollment_requests', 'city')) {
+            if (! Schema::hasColumn('bible_enrollment_requests', 'city')) {
                 $table->string('city', 255)->nullable();
             }
-            if (!Schema::hasColumn('bible_enrollment_requests', 'church_name')) {
+            if (! Schema::hasColumn('bible_enrollment_requests', 'church_name')) {
                 $table->string('church_name', 255)->nullable();
             }
-            if (!Schema::hasColumn('bible_enrollment_requests', 'phone')) {
+            if (! Schema::hasColumn('bible_enrollment_requests', 'phone')) {
                 $table->string('phone', 20)->nullable();
             }
-            if (!Schema::hasColumn('bible_enrollment_requests', 'birth_date')) {
+            if (! Schema::hasColumn('bible_enrollment_requests', 'birth_date')) {
                 $table->date('birth_date')->nullable();
             }
-            if (!Schema::hasColumn('bible_enrollment_requests', 'about')) {
+            if (! Schema::hasColumn('bible_enrollment_requests', 'about')) {
                 $table->text('about')->nullable();
             }
         });

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            if (!Schema::hasColumn('events', 'ministers_only')) {
+            if (! Schema::hasColumn('events', 'ministers_only')) {
                 $table->boolean('ministers_only')->default(false)->after('members_only');
             }
         });
@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('events', function (Blueprint $table) {
-             $table->dropColumn('ministers_only');
+            $table->dropColumn('ministers_only');
         });
     }
 };

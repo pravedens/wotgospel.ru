@@ -22,12 +22,12 @@ return new class extends Migration
             $table->timestamp('viewed_at')->nullable();
             $table->date('viewed_at_date')->nullable(); // Добавляем поле для даты
             $table->timestamps();
-            
+
             // Индексы для быстрого поиска
             $table->index(['post_id', 'ip', 'user_agent']);
             $table->index(['post_id', 'fingerprint']);
             $table->index('viewed_at_date');
-            
+
             // Уникальность - один просмотр с одного устройства в день
             $table->unique(['post_id', 'ip', 'user_agent', 'viewed_at_date'], 'unique_view_per_day');
         });

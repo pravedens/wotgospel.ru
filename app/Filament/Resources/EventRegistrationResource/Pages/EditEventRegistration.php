@@ -9,7 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditEventRegistration extends EditRecord
 {
     protected static string $resource = EventRegistrationResource::class;
-    
+
     protected function getHeaderActions(): array
     {
         return [

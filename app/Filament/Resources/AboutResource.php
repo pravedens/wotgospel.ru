@@ -2,31 +2,29 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-
 use App\Filament\Resources\AboutResource\Pages;
 use App\Models\About;
 use App\Services\ImageOptimizer;
+use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use BackedEnum;
 use UnitEnum;
 
 class AboutResource extends Resource
@@ -105,23 +103,25 @@ class AboutResource extends Resource
                             height: 800,
                             quality: 85
                         );
-                        
+
                         if ($optimizedPath) {
                             // Если есть старый файл — удаляем его
                             if ($record && $record->thumbnail) {
                                 Storage::disk('s3')->delete($record->thumbnail);
                                 \Log::info('Old thumbnail deleted on update', ['path' => $record->thumbnail]);
                             }
+
                             return $optimizedPath;
                         }
-                        
+
                         // Fallback: сохраняем оригинал
                         \Log::warning('Image optimization failed in Filament, using original', [
                             'original_name' => $file->getClientOriginalName(),
-                            'original_size' => $file->getSize()
+                            'original_size' => $file->getSize(),
                         ]);
-                        
-                        $filename = Str::slug($record?->title ?? 'about') . '-' . uniqid() . '.webp';
+
+                        $filename = Str::slug($record?->title ?? 'about').'-'.uniqid().'.webp';
+
                         return $file->storeAs('abouts/thumbnails', $filename, 's3');
                     })
                     ->deleteUploadedFileUsing(function ($file, $record) {
@@ -166,7 +166,7 @@ class AboutResource extends Resource
                             \Log::info('Thumbnail deleted on record delete', ['path' => $record->thumbnail]);
                         }
                         $record->delete();
-                        
+
                         Notification::make()
                             ->title('Статья удалена')
                             ->success()
@@ -184,7 +184,7 @@ class AboutResource extends Resource
                                 }
                                 $record->delete();
                             }
-                            
+
                             Notification::make()
                                 ->title('Записи удалены')
                                 ->success()
@@ -198,7 +198,7 @@ class AboutResource extends Resource
 
     public static function mutateFormDataBeforeCreate(array $data): array
     {
-        if (empty($data['slug']) && !empty($data['title'])) {
+        if (empty($data['slug']) && ! empty($data['title'])) {
             $data['slug'] = Str::slug($data['title']);
         }
 
@@ -207,7 +207,7 @@ class AboutResource extends Resource
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
-        if (empty($data['slug']) && !empty($data['title'])) {
+        if (empty($data['slug']) && ! empty($data['title'])) {
             $data['slug'] = Str::slug($data['title']);
         }
 
@@ -222,9 +222,9 @@ class AboutResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAbouts::route('/'),
+            'index' => Pages\ListAbouts::route('/'),
             'create' => Pages\CreateAbout::route('/create'),
-            'edit'   => Pages\EditAbout::route('/{record}/edit'),
+            'edit' => Pages\EditAbout::route('/{record}/edit'),
         ];
     }
 }

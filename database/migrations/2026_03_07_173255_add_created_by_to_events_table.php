@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::table('events', function (Blueprint $table) {
             $table->foreignId('created_by')
-                  ->nullable()
-                  ->constrained('users')
-                  ->onDelete('set null')
-                  ->after('color');
+                ->nullable()
+                ->constrained('users')
+                ->onDelete('set null')
+                ->after('color');
         });
     }
 

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('conference_services', function (Blueprint $table) {
-            if (!Schema::hasColumn('conference_services', 'sort_order')) {
+            if (! Schema::hasColumn('conference_services', 'sort_order')) {
                 $table->integer('sort_order')->default(0)->after('capacity');
             }
         });

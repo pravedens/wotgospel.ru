@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('event_attendees', function (Blueprint $table) {
-           $table->id();
-            
+            $table->id();
+
             // Без внешних ключей
             $table->unsignedInteger('event_id');
             $table->unsignedBigInteger('user_id');
-            
+
             $table->timestamps();
-            
+
             $table->unique(['event_id', 'user_id']);
             $table->index('event_id');
             $table->index('user_id');

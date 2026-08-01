@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Http\Livewire\Auth\Login;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -7,14 +9,14 @@ return [
     |--------------------------------------------------------------------------
     */
     'auth' => [
-    'guard' => env('FILAMENT_AUTH_GUARD', 'web'),
-    'remember' => true,
-    'pages' => [
-        'login' => \Filament\Http\Livewire\Auth\Login::class,
-    ],
+        'guard' => env('FILAMENT_AUTH_GUARD', 'web'),
+        'remember' => true,
+        'pages' => [
+            'login' => Login::class,
+        ],
         // 🆕 Отключаем 2FA
-    'two_factor' => false,
-],
+        'two_factor' => false,
+    ],
 
     /*
     |--------------------------------------------------------------------------

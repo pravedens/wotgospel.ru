@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('url');
             $table->integer('sort_order')->default(0);
             $table->timestamps();
-            
+
             $table->index(['user_id', 'platform']);
         });
     }

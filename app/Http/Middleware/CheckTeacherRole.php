@@ -12,17 +12,17 @@ class CheckTeacherRole
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
-        if (!$user->isTeacher() && !$user->isSuperAdmin() && !$user->isPastor()) {
+        if (! $user->isTeacher() && ! $user->isSuperAdmin() && ! $user->isPastor()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для учителей'
+                'message' => 'Доступ только для учителей',
             ], 403);
         }
 

@@ -29,7 +29,7 @@ class SendMessageNotifications implements ShouldQueue
         try {
             $receiver = User::find($this->message->receiver_id);
 
-            if (!$receiver) {
+            if (! $receiver) {
                 return;
             }
 

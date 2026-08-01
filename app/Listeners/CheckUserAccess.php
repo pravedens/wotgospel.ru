@@ -11,10 +11,10 @@ class CheckUserAccess
     public function handle(Login $event): void
     {
         $user = $event->user;
-        
+
         // Получаем URL, с которого была отправлена форма входа
         $referer = request()->header('referer');
-        
+
         // --- ОТЛАДКА (можно будет посмотреть в storage/logs/laravel.log) ---
         // Log::info('Login event fired', ['user_id' => $user->id, 'referer' => $referer]);
         // ----------------------------------------------------------------
@@ -22,12 +22,12 @@ class CheckUserAccess
         // 1. Проверяем, пытается ли пользователь войти в админ-панель
         // Ориентируемся на referer или на путь запроса
         if ($referer && str_contains($referer, '/admin')) {
-            
+
             // Проверяем права доступа к админ-панели
-            if (!$this->canAccessAdminPanel($user)) {
-                
+            if (! $this->canAccessAdminPanel($user)) {
+
                 Auth::logout();
-                
+
                 // Устанавливаем куку для показа ошибки на главной
                 setcookie('access_error', 'У вас нет прав для доступа к панели администратора', [
                     'expires' => time() + 5, // Короткое время
@@ -35,19 +35,19 @@ class CheckUserAccess
                     'domain' => '',
                     'secure' => true,
                     'httponly' => false,
-                    'samesite' => 'Lax'
+                    'samesite' => 'Lax',
                 ]);
-                
+
                 // Редирект на главную
                 header('Location: https://wotgospel.ru');
                 exit;
             }
         }
-        
+
         // 2. Если это вход в личный кабинет (/account) или с главной страницы - ничего не делаем,
         // просто пропускаем. Права доступа к панели 'user' уже проверяются самой панелью.
     }
-    
+
     /**
      * Проверяет, может ли пользователь зайти в админ-панель.
      */
@@ -59,6 +59,7 @@ class CheckUserAccess
                 return true;
             }
         }
+
         return false;
     }
 }

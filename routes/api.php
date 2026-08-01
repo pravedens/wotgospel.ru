@@ -1,58 +1,58 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Broadcast;
-
+use App\Http\Controllers\Api\AboutController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AvatarController;
 // ============================================
 // ИМПОРТЫ КОНТРОЛЛЕРОВ
 // ============================================
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ForgotPasswordController;
-use App\Http\Controllers\Api\ResetPasswordController;
-use App\Http\Controllers\Api\AvatarController;
-use App\Http\Controllers\Api\VerificationController;
-use App\Http\Controllers\Api\PostController;
-use App\Http\Controllers\Api\CategoryController;
-use App\Http\Controllers\Api\GroupController;
-use App\Http\Controllers\Api\ConferenceController;
-use App\Http\Controllers\Api\FavoriteController;
-use App\Http\Controllers\Api\StatsController;
-use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\AboutController;
-use App\Http\Controllers\Api\DenominationController;
-use App\Http\Controllers\Api\DocumentProxyController;
-use App\Http\Controllers\Api\UploadController;
-use App\Http\Controllers\Api\BibleController;
-use App\Http\Controllers\Api\ContactsController;
-use App\Http\Controllers\Api\LiveStreamController;
-use App\Http\Controllers\Api\PastorUserController;
-use App\Http\Controllers\Api\NotificationSettingsController;
-use App\Http\Controllers\Api\TestNotificationController;
-use App\Http\Controllers\Api\PushSubscriptionController;
-use App\Http\Controllers\Api\EventRegistrationController;
-use App\Http\Controllers\Api\MinisterController;
-use App\Http\Controllers\Api\MinisterMessageController;
-use App\Http\Controllers\Api\CommentController;
-use App\Http\Controllers\Api\FriendController;
-use App\Http\Controllers\Api\BibleCourseController;
 use App\Http\Controllers\Api\BibleCertificateController;
-use App\Http\Controllers\Api\BibleEnrollmentController;
-use App\Http\Controllers\Api\BibleProgressController;
-use App\Http\Controllers\Api\BibleLessonController;
-use App\Http\Controllers\Api\BibleTestController;
-use App\Http\Controllers\Api\BibleEssayController;
 use App\Http\Controllers\Api\BibleCommentController;
+use App\Http\Controllers\Api\BibleController;
+use App\Http\Controllers\Api\BibleCourseController;
+use App\Http\Controllers\Api\BibleEnrollmentController;
+use App\Http\Controllers\Api\BibleEssayController;
+use App\Http\Controllers\Api\BibleLessonController;
 use App\Http\Controllers\Api\BiblePartyController;
+use App\Http\Controllers\Api\BibleProgressController;
 use App\Http\Controllers\Api\BibleSchoolController;
 use App\Http\Controllers\Api\BibleTeacherController;
-use App\Http\Controllers\Api\TeacherMessageController;
-use App\Http\Controllers\Api\TeacherLessonController;
-use App\Http\Controllers\Api\TeacherCourseController;
-use App\Http\Controllers\Api\TeacherThemeController;
-use App\Http\Controllers\Api\TeacherQuestionController;
+use App\Http\Controllers\Api\BibleTestController;
 use App\Http\Controllers\Api\BibleThemeController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\ConferenceController;
+use App\Http\Controllers\Api\ContactsController;
+use App\Http\Controllers\Api\DenominationController;
+use App\Http\Controllers\Api\DocumentProxyController;
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\EventRegistrationController;
+use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\FriendController;
+use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\LiveStreamController;
+use App\Http\Controllers\Api\MinisterController;
+use App\Http\Controllers\Api\MinisterMessageController;
+use App\Http\Controllers\Api\NotificationSettingsController;
+use App\Http\Controllers\Api\PastorUserController;
+use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PushSubscriptionController;
+use App\Http\Controllers\Api\ResetPasswordController;
+use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\TeacherCourseController;
+use App\Http\Controllers\Api\TeacherLessonController;
+use App\Http\Controllers\Api\TeacherMessageController;
+use App\Http\Controllers\Api\TeacherQuestionController;
+use App\Http\Controllers\Api\TeacherThemeController;
+use App\Http\Controllers\Api\TestNotificationController;
+use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\VerificationController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Route;
 
 // ============================================
 // ПРОКСИ ДЛЯ ПРОСМОТРА ДОКУМЕНТОВ
@@ -60,7 +60,7 @@ use App\Http\Controllers\Api\ChatController;
 Route::get('/doc-view/{path}', [DocumentProxyController::class, 'show'])
     ->where('path', '.*')
     ->name('doc.viewer');
-    
+
 // ============================================
 // BROADCASTING AUTH (СТАНДАРТНЫЙ LARAVEL)
 // ============================================
@@ -71,6 +71,10 @@ Route::post('/broadcasting/auth', function (Request $request) {
 // ============================================
 // ПУБЛИЧНЫЕ МАРШРУТЫ
 // ============================================
+Route::get('/home', [HomeController::class, 'index']);
+Route::post('/home/clear-cache', [HomeController::class, 'clearCache'])
+    ->middleware(['auth:sanctum', 'admin.access']);
+
 Route::get('/events/carousel-stats', [EventController::class, 'carouselStats']);
 Route::get('/events/upcoming', [EventController::class, 'upcoming']);
 Route::get('/events', [EventController::class, 'index']);
@@ -80,15 +84,19 @@ Route::get('/live/current', [LiveStreamController::class, 'current']);
 Route::get('/live/upcoming', [LiveStreamController::class, 'upcoming']);
 
 Route::get('/posts/random', [PostController::class, 'recommended']);
-Route::get('/filtered-categories', [PostController::class, 'filteredCategories']);
-Route::get('/filtered-groups', [PostController::class, 'filteredGroups']);
-Route::get('/filtered-conferences', [PostController::class, 'filteredConferences']);
+// Route::get('/filtered-categories', [PostController::class, 'filteredCategories']);
+// Route::get('/filtered-groups', [PostController::class, 'filteredGroups']);
+// Route::get('/filtered-conferences', [PostController::class, 'filteredConferences']);
 Route::get('/posts', [PostController::class, 'index']);
 Route::get('/posts/{slug}', [PostController::class, 'show']);
+Route::post('/posts/recommended/clear-cache', [PostController::class, 'clearRecommendedCache'])
+    ->middleware(['auth:sanctum', 'admin.access']);
+Route::get('/filters', [PostController::class, 'filters']);
+Route::post('/posts/stats/bulk', [StatsController::class, 'getBulkStats']);
 
-Route::get('/categories', [CategoryController::class, 'index']);
-Route::get('/groups', [GroupController::class, 'index']);
-Route::get('/conferences', [ConferenceController::class, 'index']);
+// Route::get('/categories', [CategoryController::class, 'index']);
+// Route::get('/groups', [GroupController::class, 'index']);
+// Route::get('/conferences', [ConferenceController::class, 'index']);
 
 Route::get('/friends', [FriendController::class, 'index']);
 Route::get('/friends/{slug}', [FriendController::class, 'show']);
@@ -107,6 +115,8 @@ Route::get('/denominations', [AboutController::class, 'denominations']);
 Route::get('/denominations/{slug}/abouts', [AboutController::class, 'byDenomination']);
 Route::get('/denominations', [DenominationController::class, 'index']);
 Route::get('/denominations/{slug}', [DenominationController::class, 'show']);
+Route::post('/abouts/clear-cache', [AboutController::class, 'clearCache'])
+    ->middleware(['auth:sanctum', 'admin.access']);
 
 // ============================================
 // ПУБЛИЧНЫЕ МАРШРУТЫ ДЛЯ СЛУЖИТЕЛЕЙ
@@ -150,7 +160,7 @@ Route::post('/email/verification-notification', [VerificationController::class, 
 // ============================================
 // CSRF И ПРОЧЕЕ
 // ============================================
-Route::get('/csrf-token', fn() => response()->json(['csrf_token' => csrf_token()]));
+Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token()]));
 Route::get('/contacts/recipients-public', [ContactsController::class, 'getPublicRecipients']);
 Route::get('/events/{event}/attendees-count', [EventController::class, 'getAttendeesCount']);
 
@@ -236,21 +246,12 @@ Route::post('/posts/{postId}/view', [StatsController::class, 'trackView']);
 Route::post('/posts/{postId}/like', [StatsController::class, 'toggleLike']);
 Route::get('/posts/{postId}/stats', [StatsController::class, 'getStats']);
 
-Route::any('/any-request', function(Request $request) {
-    \Log::info('ANY REQUEST HIT', [
-        'method' => $request->method(),
-        'uri' => $request->path(),
-        'full_url' => $request->fullUrl()
-    ]);
-    return response()->json(['status' => 'logged']);
-});
-
 // ============================================
 // ВРЕМЕННЫЙ МАРШРУТ ДЛЯ ЭССЕ (без параметра в URL)
 // ============================================
 Route::post('/bible-school/essay-store', [BibleEssayController::class, 'storeTemp'])
     ->middleware('auth:sanctum');
-    
+
 // ============================================
 // ПОИСК ПОЛЬЗОВАТЕЛЕЙ ДЛЯ ЧАТА
 // ============================================
@@ -278,7 +279,7 @@ Route::prefix('bible-school')->group(function () {
 
     // ========== УЧИТЕЛЬ (общая группа) ==========
     Route::middleware(['auth:sanctum', 'role.teacher'])->group(function () {
-        
+
         // Существующие методы BibleTeacherController
         Route::get('/teacher/dashboard', [BibleTeacherController::class, 'dashboard']);
         Route::post('/enrollment-requests/{id}/approve', [BibleTeacherController::class, 'approveRequest']);
@@ -290,31 +291,31 @@ Route::prefix('bible-school')->group(function () {
         Route::put('/teacher-messages/{id}/read', [TeacherMessageController::class, 'markAsRead']);
         Route::get('/teacher-messages/unread-count', [TeacherMessageController::class, 'getUnreadCount']);
         Route::delete('/teacher-messages/{id}', [TeacherMessageController::class, 'destroy']);
-        
+
         // Дополнительные методы для учителя (студенты)
         Route::get('/teacher/students', [BibleTeacherController::class, 'getStudents']);
         Route::delete('/teacher/students/{userId}/role', [BibleTeacherController::class, 'removeStudentRole']);
         Route::put('/teacher/students/{userId}/course', [BibleTeacherController::class, 'updateStudentCourse']);
         Route::delete('/teacher/students/{userId}/role', [BibleTeacherController::class, 'removeStudentRole']);
-        
+
         // Темы для учителя (публичные? лучше оставить в общей группе для всех)
         Route::get('/themes', [BibleThemeController::class, 'indexAll']);
         Route::get('/themes/{course:slug}', [BibleThemeController::class, 'index']);
         Route::get('/themes/{theme:slug}/lessons', [BibleThemeController::class, 'lessons']);
-        
+
         // ========== УПРАВЛЕНИЕ КУРСАМИ, УРОКАМИ, ТЕМАМИ, ВОПРОСАМИ ==========
         // Курсы
         Route::apiResource('/teacher/courses', TeacherCourseController::class);
         Route::patch('/teacher/courses/{id}/toggle-publish', [TeacherCourseController::class, 'togglePublish']);
-        
+
         // Уроки
         Route::apiResource('/teacher/lessons', TeacherLessonController::class);
         Route::patch('/teacher/lessons/{id}/toggle-publish', [TeacherLessonController::class, 'togglePublish']);
-        
+
         // Темы
         Route::apiResource('/teacher/themes', TeacherThemeController::class);
         Route::patch('/teacher/themes/{id}/toggle-publish', [TeacherThemeController::class, 'togglePublish']);
-        
+
         // Вопросы
         Route::apiResource('/teacher/questions', TeacherQuestionController::class);
         Route::get('/teacher/question-types', [TeacherQuestionController::class, 'getTypes']);
@@ -322,7 +323,7 @@ Route::prefix('bible-school')->group(function () {
 
     // ========== УЧЕНИК / ЛИДЕР ГРУППЫ ==========
     Route::middleware(['auth:sanctum', 'role.student'])->group(function () {
-        
+
         Route::get('/courses/{course:slug}', [BibleCourseController::class, 'show']);
 
         // Заявки на обучение
@@ -373,7 +374,7 @@ Route::prefix('bible-school')->group(function () {
         Route::get('/my/certificates', [BibleCertificateController::class, 'index']);
         Route::get('/certificate/{uuid}/download', [BibleCertificateController::class, 'download']);
     });
-    
+
     // ============================================
     // ЧАТ (ЕДИНАЯ СИСТЕМА)
     // ============================================
@@ -393,7 +394,7 @@ Route::prefix('bible-school')->group(function () {
         // Тайпинг (печатает)
         Route::post('/conversations/{id}/typing/start', [ChatController::class, 'typingStarted']);
         Route::post('/conversations/{id}/typing/stop', [ChatController::class, 'typingStopped']);
-        
+
         Route::get('/teachers', [ChatController::class, 'getTeachers']);
     });
 });

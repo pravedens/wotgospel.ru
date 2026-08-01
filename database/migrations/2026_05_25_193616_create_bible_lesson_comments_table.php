@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            
+
             $table->index(['lesson_id', 'is_approved', 'created_at']);
             $table->index('user_id');
             $table->index('parent_id');

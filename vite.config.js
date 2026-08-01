@@ -7,7 +7,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/css/filament/admin.css', // ← ДОБАВИТЬ ЭТУ СТРОКУ
+                'resources/css/filament/admin.css', 
                 'resources/js/app.js'
             ],
             refresh: true,

@@ -4,8 +4,8 @@ namespace App\Notifications;
 
 use App\Models\MinisterMessage;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
 class MinisterMessageNotification extends Notification
 {
@@ -27,13 +27,13 @@ class MinisterMessageNotification extends Notification
     {
         return (new MailMessage)
             ->subject('✉️ Новое сообщение от прихожанина')
-            ->greeting('Здравствуйте, ' . ($notifiable->full_name ?? $notifiable->name) . '!')
+            ->greeting('Здравствуйте, '.($notifiable->full_name ?? $notifiable->name).'!')
             ->line('Вам пришло новое сообщение от прихожанина.')
-            ->line('**От:** ' . $this->message->sender_name . ' (' . $this->message->sender_email . ')')
+            ->line('**От:** '.$this->message->sender_name.' ('.$this->message->sender_email.')')
             ->line('**Сообщение:**')
             ->line($this->message->message)
-            ->action('Ответить', 'mailto:' . $this->message->sender_email)
+            ->action('Ответить', 'mailto:'.$this->message->sender_email)
             ->line('Вы можете прочитать и ответить на сообщение в личном кабинете.')
-            ->salutation('С уважением, ' . config('app.name'));
+            ->salutation('С уважением, '.config('app.name'));
     }
 }

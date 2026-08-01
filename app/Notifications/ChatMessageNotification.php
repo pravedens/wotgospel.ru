@@ -5,14 +5,15 @@ namespace App\Notifications;
 use App\Models\Message;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class ChatMessageNotification extends Notification
 {
     use Queueable;
 
     protected Message $message;
+
     protected string $senderName;
 
     public function __construct(Message $message, string $senderName)
@@ -36,7 +37,7 @@ class ChatMessageNotification extends Notification
             ->icon('/favicon/icon-192.png')
             ->badge('/favicon/favicon-32.png')
             ->data([
-                'url' => 'https://wotnt.ru/dashboard?tab=chat&conversation=' . $conversationId,
+                'url' => 'https://wotnt.ru/dashboard?tab=chat&conversation='.$conversationId,
                 'conversation_id' => $conversationId,
                 'message_id' => $this->message->id,
                 'type' => 'chat_message',

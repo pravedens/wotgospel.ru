@@ -15,7 +15,7 @@ class CategoryController extends Controller
 
     public function filtered(Request $request)
     {
-        $query = Category::withCount(['posts' => function($q) use ($request) {
+        $query = Category::withCount(['posts' => function ($q) use ($request) {
             if ($request->has('group_id')) {
                 $q->where('group_id', $request->group_id);
             }
@@ -23,9 +23,9 @@ class CategoryController extends Controller
                 $q->where('conference_id', $request->conference_id);
             }
         }]);
-        
+
         return $query->having('posts_count', '>', 0)
-                     ->orderBy('title')
-                     ->get();
+            ->orderBy('title')
+            ->get();
     }
 }

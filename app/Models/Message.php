@@ -62,20 +62,20 @@ class Message extends Model
 
     public function markAsRead(): void
     {
-        if (!$this->is_read) {
+        if (! $this->is_read) {
             $this->update([
                 'is_read' => true,
-                'read_at' => now()
+                'read_at' => now(),
             ]);
         }
     }
 
     public function markAsDelivered(): void
     {
-        if (!$this->is_delivered) {
+        if (! $this->is_delivered) {
             $this->update([
                 'is_delivered' => true,
-                'delivered_at' => now()
+                'delivered_at' => now(),
             ]);
         }
     }

@@ -1,16 +1,18 @@
 <?php
 
+use App\Http\Middleware\CheckAdminAccess;
+use App\Http\Middleware\CheckGroupLeaderRole;
+use App\Http\Middleware\CheckPastorRole;
+use App\Http\Middleware\CheckStudentRole;
+use App\Http\Middleware\CheckTeacherRole;
+use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Providers\EventServiceProvider;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\EnsureEmailIsVerified;
-use App\Http\Middleware\CheckAdminAccess;
-use App\Http\Middleware\CheckTeacherRole;
-use App\Http\Middleware\CheckStudentRole;
-use App\Http\Middleware\CheckGroupLeaderRole;
-use App\Http\Middleware\CheckPastorRole;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,11 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withProviders([
-        App\Providers\EventServiceProvider::class, // ← ДОБАВИТЬ ЭТУ СТРОКУ
+        EventServiceProvider::class, // ← ДОБАВИТЬ ЭТУ СТРОКУ
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'verified'     => EnsureEmailIsVerified::class,
+            'verified' => EnsureEmailIsVerified::class,
             'admin.access' => CheckAdminAccess::class,
             'role.teacher' => CheckTeacherRole::class,
             'role.student' => CheckStudentRole::class,
@@ -34,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->api([
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            SubstituteBindings::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

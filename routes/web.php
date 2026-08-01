@@ -1,25 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Http\Controllers\Auth\FilamentVerificationController;
 use App\Http\Controllers\Admin\CertificatePreviewController;
+use App\Http\Controllers\Auth\FilamentVerificationController;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
-Route::get("/test-mail", function () {
+Route::get('/test-mail', function () {
     $user = User::find(83);
     if ($user) {
         $user->sendEmailVerificationNotification();
-        return "Email sent to " . $user->email;
+
+        return 'Email sent to '.$user->email;
     }
-    return "User not found";
+
+    return 'User not found';
 });
 
 Route::get('/test-mail-debug', function () {
     Mail::raw('Тестовое письмо из Debug Mail', function ($message) {
         $message->to('test@example.com')
-                ->subject('Тест Debug Mail');
+            ->subject('Тест Debug Mail');
     });
 
     return 'Письмо отправлено!';
@@ -43,6 +45,7 @@ Route::post('/logout', function () {
 
 Route::get('/reset-password/{token}', function ($token) {
     $email = request()->email;
+
     return redirect("https://wotnt.ru/auth/reset-password?token={$token}&email={$email}");
 })->name('password.reset');
 

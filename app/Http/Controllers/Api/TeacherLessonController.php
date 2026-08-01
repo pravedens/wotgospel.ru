@@ -4,19 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BibleLesson;
-use App\Models\BibleCourse;
-use App\Models\BibleTheme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
 
 class TeacherLessonController extends Controller
 {
     public function index()
-{
-    $lessons = BibleLesson::with('course', 'theme')->orderBy('course_id')->orderBy('order')->get();
-    return response()->json(['lessons' => $lessons]);
-}
+    {
+        $lessons = BibleLesson::with('course', 'theme')->orderBy('course_id')->orderBy('order')->get();
+
+        return response()->json(['lessons' => $lessons]);
+    }
 
     public function store(Request $request)
     {
@@ -44,6 +42,7 @@ class TeacherLessonController extends Controller
     public function show($id)
     {
         $lesson = BibleLesson::findOrFail($id);
+
         return response()->json(['lesson' => $lesson]);
     }
 
@@ -71,6 +70,7 @@ class TeacherLessonController extends Controller
         }
 
         $lesson->update($data);
+
         return response()->json(['lesson' => $lesson]);
     }
 
@@ -78,14 +78,16 @@ class TeacherLessonController extends Controller
     {
         $lesson = BibleLesson::findOrFail($id);
         $lesson->delete();
+
         return response()->json(['message' => 'Урок удалён']);
     }
 
     public function togglePublish($id)
     {
         $lesson = BibleLesson::findOrFail($id);
-        $lesson->is_published = !$lesson->is_published;
+        $lesson->is_published = ! $lesson->is_published;
         $lesson->save();
+
         return response()->json(['lesson' => $lesson]);
     }
 }

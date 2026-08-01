@@ -20,7 +20,7 @@ return new class extends Migration
             $table->boolean('is_approved')->default(true);
             $table->integer('likes_count')->default(0);
             $table->timestamps();
-            
+
             // Только индексы, без внешних ключей
             $table->index('post_id');
             $table->index('user_id');

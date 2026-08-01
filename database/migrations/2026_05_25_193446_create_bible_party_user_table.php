@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('joined_at')->useCurrent();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['party_id', 'user_id']);
             $table->index('user_id');
             $table->index('is_active');

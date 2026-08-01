@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Filament\Pages\Auth\PasswordReset\ResetPassword;
 use App\Filament\Pages\Auth\CustomResetPassword;
+use Filament\Pages\Auth\PasswordReset\ResetPassword;
+use Illuminate\Support\ServiceProvider;
 
 class FilamentAuthServiceProvider extends ServiceProvider
 {

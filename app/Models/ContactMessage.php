@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContactMessage extends Model
 {
     use HasFactory;
-    
+
     /**
      * The attributes that are mass assignable.
      *
@@ -27,7 +27,7 @@ class ContactMessage extends Model
         'recipient_email',
         'recipient_emails_list',
     ];
-    
+
     /**
      * The attributes that should be cast.
      *
@@ -38,7 +38,7 @@ class ContactMessage extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    
+
     /**
      * Get the user that sent the message.
      */
@@ -46,7 +46,7 @@ class ContactMessage extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     /**
      * Mark message as read.
      */
@@ -54,7 +54,7 @@ class ContactMessage extends Model
     {
         $this->update(['is_read' => true]);
     }
-    
+
     /**
      * Mark message as unread.
      */
@@ -62,7 +62,7 @@ class ContactMessage extends Model
     {
         $this->update(['is_read' => false]);
     }
-    
+
     /**
      * Scope for unread messages.
      */
@@ -70,7 +70,7 @@ class ContactMessage extends Model
     {
         return $query->where('is_read', false);
     }
-    
+
     /**
      * Scope for read messages.
      */
@@ -78,7 +78,7 @@ class ContactMessage extends Model
     {
         return $query->where('is_read', true);
     }
-    
+
     /**
      * Scope for messages from a specific user.
      */
@@ -86,7 +86,7 @@ class ContactMessage extends Model
     {
         return $query->where('user_id', $userId);
     }
-    
+
     /**
      * Scope for messages from a specific email.
      */

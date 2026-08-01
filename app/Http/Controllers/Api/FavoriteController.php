@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Post;
 use App\Models\Favorite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +15,7 @@ class FavoriteController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         $favorites = $user->favoritePosts()
             ->with(['category', 'group', 'conference'])
             ->latest()
@@ -31,7 +30,7 @@ class FavoriteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'post_id' => 'required|exists:posts,id'
+            'post_id' => 'required|exists:posts,id',
         ]);
 
         $user = Auth::user();
@@ -44,14 +43,14 @@ class FavoriteController extends Controller
 
         if ($exists) {
             return response()->json([
-                'message' => 'Пост уже в избранном'
+                'message' => 'Пост уже в избранном',
             ], 400);
         }
 
         // Добавляем в избранное
         Favorite::create([
             'user_id' => $user->id,
-            'post_id' => $postId
+            'post_id' => $postId,
         ]);
 
         // Получаем обновленное количество
@@ -60,7 +59,7 @@ class FavoriteController extends Controller
         return response()->json([
             'message' => 'Добавлено в избранное',
             'is_favorite' => true,
-            'favorites_count' => $favoritesCount
+            'favorites_count' => $favoritesCount,
         ]);
     }
 
@@ -68,26 +67,26 @@ class FavoriteController extends Controller
      * Удалить пост из избранного
      */
     public function destroy($postId)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $favorite = Favorite::where('user_id', $user->id)
-        ->where('post_id', $postId)
-        ->first();
+        $favorite = Favorite::where('user_id', $user->id)
+            ->where('post_id', $postId)
+            ->first();
 
-    if (!$favorite) {
+        if (! $favorite) {
+            return response()->json([
+                'message' => 'Пост не найден в избранном',
+            ], 404);
+        }
+
+        $favorite->delete();
+
         return response()->json([
-            'message' => 'Пост не найден в избранном'
-        ], 404);
+            'message' => 'Удалено из избранного',
+            'is_favorite' => false,
+        ]);
     }
-
-    $favorite->delete();
-
-    return response()->json([
-        'message' => 'Удалено из избранного',
-        'is_favorite' => false
-    ]);
-}
 
     /**
      * Проверить, находится ли пост в избранном у текущего пользователя
@@ -101,7 +100,7 @@ class FavoriteController extends Controller
             ->exists();
 
         return response()->json([
-            'is_favorite' => $isFavorite
+            'is_favorite' => $isFavorite,
         ]);
     }
 }

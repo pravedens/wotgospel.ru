@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/TrustedDevice.php
 
 namespace App\Models;
@@ -16,11 +17,11 @@ class TrustedDevice extends Model
         'user_agent',
         'last_used_at',
     ];
-    
+
     protected $casts = [
         'last_used_at' => 'datetime',
     ];
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

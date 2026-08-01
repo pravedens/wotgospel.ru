@@ -3,8 +3,8 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\Request;
 
 class EnsureEmailIsVerified
 {
@@ -13,7 +13,7 @@ class EnsureEmailIsVerified
         if (! $request->user() ||
             ($request->user() instanceof MustVerifyEmail &&
             ! $request->user()->hasVerifiedEmail())) {
-            
+
             return $request->expectsJson()
                     ? abort(403, 'Your email address is not verified.')
                     : redirect()->route('verification.notice');

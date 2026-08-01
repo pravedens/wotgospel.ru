@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('comment_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
-            
+
             $table->index('comment_id');
             $table->index('user_id');
             $table->unique(['comment_id', 'user_id']);

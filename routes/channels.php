@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
-use App\Models\Conversation;
 
 // ============================================
 // ПОЛЬЗОВАТЕЛЬСКИЙ КАНАЛ
@@ -29,6 +29,7 @@ Broadcast::channel('conversation.{id}', function ($user, $id) {
             'conversation_id' => $id,
             'channel_name' => request('channel_name'),
         ]);
+
         return false;
     }
 
@@ -49,6 +50,7 @@ Broadcast::channel('conversation.{id}', function ($user, $id) {
             'auth_user_id' => $user?->id,
             'channel_name' => request('channel_name'),
         ]);
+
         return false;
     }
 

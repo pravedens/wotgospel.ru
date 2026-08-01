@@ -8,30 +8,30 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BibleLessonVideo extends Model
 {
     protected $table = 'bible_lesson_videos';
-    
+
     protected $fillable = [
         'lesson_id',
         'title',
         'url',
         'platform',
         'video_id',
-        'order'
+        'order',
     ];
-    
+
     protected $casts = [
         'order' => 'integer',
     ];
-    
+
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(BibleLesson::class);
     }
-    
+
     // Автоматическое определение платформы и ID видео
     public function setUrlAttribute($value)
     {
         $this->attributes['url'] = $value;
-        
+
         if ($value) {
             // Rutube
             if (str_contains($value, 'rutube.ru')) {
@@ -59,23 +59,25 @@ class BibleLessonVideo extends Model
             }
         }
     }
-    
+
     // Получить embed URL
     public function getEmbedUrlAttribute(): ?string
     {
-        if (!$this->url) return null;
-        
+        if (! $this->url) {
+            return null;
+        }
+
         if ($this->platform === 'rutube') {
             $embedUrl = "https://rutube.ru/play/embed/{$this->video_id}";
-            
+
             // Добавляем ключ доступа для приватных видео
             if (preg_match('/[?&]p=([a-zA-Z0-9_\-]+)/', $this->url, $matches)) {
-                $embedUrl .= "?p=" . $matches[1];
+                $embedUrl .= '?p='.$matches[1];
             }
-            
+
             return $embedUrl;
         }
-        
+
         return match ($this->platform) {
             'youtube' => "https://www.youtube.com/embed/{$this->video_id}",
             'vk' => "https://vk.com/video_ext.php?oid={$this->video_id}",

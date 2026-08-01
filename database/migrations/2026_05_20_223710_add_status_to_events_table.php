@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            if (!Schema::hasColumn('events', 'status')) {
+            if (! Schema::hasColumn('events', 'status')) {
                 $table->enum('status', ['active', 'cancelled'])->default('active')->after('is_published');
             }
         });

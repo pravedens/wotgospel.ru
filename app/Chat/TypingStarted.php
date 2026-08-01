@@ -13,7 +13,9 @@ class TypingStarted implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public int $conversationId;
+
     public int $userId;
+
     public string $userName;
 
     public function __construct(int $conversationId, int $userId, string $userName)

@@ -1,15 +1,17 @@
 <?php
+
 // app/Console/Commands/ImportBibleVerses.php
 
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class ImportBibleVerses extends Command
 {
     protected $signature = 'bible:import';
+
     protected $description = 'Import Bible verses from getbible.net';
 
     public function handle()
@@ -38,26 +40,26 @@ class ImportBibleVerses extends Command
             'TIT' => 'Титу', 'PHM' => 'Филимону', 'HEB' => 'Евреям',
             'JAS' => 'Иакова', '1PE' => '1 Петра', '2PE' => '2 Петра',
             '1JN' => '1 Иоанна', '2JN' => '2 Иоанна', '3JN' => '3 Иоанна',
-            'JUD' => 'Иуды', 'REV' => 'Откровение'
+            'JUD' => 'Иуды', 'REV' => 'Откровение',
         ];
 
         $totalVerses = 0;
 
         foreach ($books as $bookCode => $bookName) {
             $this->info("Processing: $bookName");
-            
+
             $chapter = 1;
             $hasMoreChapters = true;
-            
+
             while ($hasMoreChapters) {
                 $url = "https://getbible.net/json?book=$bookCode&chapter=$chapter";
-                
+
                 try {
                     $response = Http::timeout(30)->get($url);
-                    
+
                     if ($response->successful()) {
                         $data = $response->json();
-                        
+
                         if (isset($data['chapter']['verses'])) {
                             foreach ($data['chapter']['verses'] as $verseNum => $verseText) {
                                 DB::table('bible_verses')->insert([
@@ -71,7 +73,7 @@ class ImportBibleVerses extends Command
                                 ]);
                                 $totalVerses++;
                             }
-                            $this->info("  Chapter $chapter: " . count($data['chapter']['verses']) . " verses");
+                            $this->info("  Chapter $chapter: ".count($data['chapter']['verses']).' verses');
                             $chapter++;
                         } else {
                             $hasMoreChapters = false;
@@ -113,6 +115,7 @@ class ImportBibleVerses extends Command
             '2 Иоанна' => '2 Ин.', '3 Иоанна' => '3 Ин.', 'Иуды' => 'Иуд.',
             'Откровение' => 'Откр.',
         ];
+
         return $abbr[$bookName] ?? substr($bookName, 0, 3);
     }
 }

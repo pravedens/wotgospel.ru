@@ -31,7 +31,7 @@ return new class extends Migration
                 'gender',
                 'ministry',
                 'bible_courses_experience',
-                'learning_expectations'
+                'learning_expectations',
             ]);
         });
     }

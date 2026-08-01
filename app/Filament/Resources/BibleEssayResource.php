@@ -1,16 +1,16 @@
 <?php
+
 // app/Filament/Resources/BibleEssayResource.php
 
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BibleEssayResource\Pages;
 use App\Models\BibleEssay;
-use App\Models\User;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -18,32 +18,31 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\HtmlString;
-use BackedEnum;
 use UnitEnum;
 
 class BibleEssayResource extends Resource
 {
     protected static ?string $model = BibleEssay::class;
-    
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-pencil-square';
-    
+
     protected static UnitEnum|string|null $navigationGroup = 'Библейская школа';
-    
+
     protected static ?string $navigationLabel = 'Проверка эссе';
-    
+
     protected static ?string $pluralModelLabel = 'Эссе';
-    
+
     protected static ?int $navigationSort = 4;
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('status', 'pending')->count() ?: null;
     }
-    
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -53,22 +52,22 @@ class BibleEssayResource extends Resource
                         ->label('Ученик')
                         ->disabled()
                         ->formatStateUsing(fn ($state, $record) => $record->user->full_name),
-                    
+
                     TextInput::make('lesson.title')
                         ->label('Урок')
                         ->disabled()
                         ->formatStateUsing(fn ($state, $record) => $record->lesson->title),
-                    
+
                     TextInput::make('question.question')
                         ->label('Вопрос')
                         ->disabled()
                         ->formatStateUsing(fn ($state, $record) => new HtmlString($record->question->question)),
-                    
+
                     RichEditor::make('content')
                         ->label('Ответ ученика')
                         ->disabled()
                         ->columnSpanFull(),
-                    
+
                     Select::make('status')
                         ->label('Статус')
                         ->options([
@@ -78,14 +77,14 @@ class BibleEssayResource extends Resource
                         ])
                         ->required()
                         ->reactive(),
-                    
+
                     TextInput::make('score')
                         ->label('Оценка (0-100)')
                         ->numeric()
                         ->minValue(0)
                         ->maxValue(100)
                         ->visible(fn ($get) => $get('status') !== 'pending'),
-                    
+
                     RichEditor::make('teacher_feedback')
                         ->label('Отзыв учителя')
                         ->toolbarButtons(['bold', 'italic', 'underline'])
@@ -94,7 +93,7 @@ class BibleEssayResource extends Resource
                 ])->columns(2),
         ]);
     }
-    
+
     public static function table(Table $table): Table
     {
         return $table
@@ -103,17 +102,17 @@ class BibleEssayResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('user.full_name')
                     ->label('Ученик')
                     ->searchable()
                     ->sortable(),
-                
+
                 TextColumn::make('lesson.title')
                     ->label('Урок')
                     ->searchable()
                     ->sortable(),
-                
+
                 BadgeColumn::make('status')
                     ->label('Статус')
                     ->colors([
@@ -127,16 +126,16 @@ class BibleEssayResource extends Resource
                         'rejected' => 'Отклонено',
                         default => $state,
                     }),
-                
+
                 TextColumn::make('score')
                     ->label('Оценка')
                     ->sortable(),
-                
+
                 TextColumn::make('created_at')
                     ->label('Создано')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
-                
+
                 TextColumn::make('reviewed_at')
                     ->label('Проверено')
                     ->dateTime('d.m.Y H:i')
@@ -152,7 +151,7 @@ class BibleEssayResource extends Resource
                         'approved' => 'Одобрено',
                         'rejected' => 'Отклонено',
                     ]),
-                
+
                 Tables\Filters\SelectFilter::make('lesson_id')
                     ->label('Урок')
                     ->relationship('lesson', 'title'),
@@ -169,7 +168,7 @@ class BibleEssayResource extends Resource
                 ]),
             ]);
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -177,7 +176,7 @@ class BibleEssayResource extends Resource
             'edit' => Pages\EditBibleEssay::route('/{record}/edit'),
         ];
     }
-    
+
     public static function canCreate(): bool
     {
         return false; // Эссе создаются только учениками

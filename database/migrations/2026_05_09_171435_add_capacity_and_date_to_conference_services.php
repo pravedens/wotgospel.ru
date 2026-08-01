@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::table('conference_services', function (Blueprint $table) {
             // Добавляем дату служения
-            if (!Schema::hasColumn('conference_services', 'service_date')) {
+            if (! Schema::hasColumn('conference_services', 'service_date')) {
                 $table->date('service_date')->nullable()->after('event_id');
             }
-            
+
             // Добавляем количество мест
-            if (!Schema::hasColumn('conference_services', 'capacity')) {
+            if (! Schema::hasColumn('conference_services', 'capacity')) {
                 $table->unsignedInteger('capacity')->default(0)->after('speaker');
             }
         });

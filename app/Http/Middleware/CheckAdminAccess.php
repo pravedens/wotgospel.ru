@@ -12,12 +12,12 @@ class CheckAdminAccess
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('filament.admin.auth.login');
         }
 
         // Разрешаем доступ: super_admin, admin, redactorEvents, teacher
-        if (!$user->hasAnyRole(['super_admin', 'admin', 'redactorEvents', 'teacher'])) {
+        if (! $user->hasAnyRole(['super_admin', 'admin', 'redactorEvents', 'teacher'])) {
             abort(403, 'Недостаточно прав доступа');
         }
 

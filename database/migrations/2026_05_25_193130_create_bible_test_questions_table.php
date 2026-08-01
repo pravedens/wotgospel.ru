@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('bible_test_questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_id')->constrained('bible_lessons')->cascadeOnDelete();
-            
+
             $table->enum('type', [
                 'single_choice',
                 'multiple_choice',
@@ -24,15 +24,15 @@ return new class extends Migration
                 'verse_reference',
                 'select_verse',
                 'true_false',
-                'fill_blank'
+                'fill_blank',
             ])->default('single_choice');
-            
+
             $table->text('question');
             $table->json('config'); // конфигурация вопроса (зависит от типа)
             $table->integer('points')->default(1);
             $table->integer('order')->default(0);
             $table->timestamps();
-            
+
             $table->index(['lesson_id', 'order']);
             $table->index('type');
         });

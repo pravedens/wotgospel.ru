@@ -25,19 +25,19 @@ class FriendController extends Controller
                     'sort_order' => $friend->sort_order,
                 ];
             });
-        
+
         return response()->json([
             'success' => true,
-            'data' => $friends
+            'data' => $friends,
         ]);
     }
-    
+
     public function show($slug)
     {
         $friend = Friend::where('slug', $slug)
             ->active()
             ->firstOrFail();
-        
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -48,7 +48,7 @@ class FriendController extends Controller
                 'thumbnail' => $friend->thumbnail,
                 'thumbnail_url' => $friend->thumbnail_url,
                 'link' => $friend->link,
-            ]
+            ],
         ]);
     }
 }

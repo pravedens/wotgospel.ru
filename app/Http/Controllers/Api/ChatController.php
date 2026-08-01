@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Message;
-use App\Services\ChatService;
 use App\Chat\TypingStarted;
 use App\Chat\TypingStopped;
+use App\Http\Controllers\Controller;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\User;
+use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -134,7 +135,7 @@ class ChatController extends Controller
                 ], 422);
             }
 
-            $conversation = \App\Models\Conversation::findOrCreate($user->id, $request->user_id);
+            $conversation = Conversation::findOrCreate($user->id, $request->user_id);
 
             return response()->json([
                 'success' => true,
@@ -154,9 +155,9 @@ class ChatController extends Controller
     {
         try {
             $user = $request->user();
-            $conversation = \App\Models\Conversation::findOrFail($conversationId);
+            $conversation = Conversation::findOrFail($conversationId);
 
-            if (!$conversation->hasUser($user->id)) {
+            if (! $conversation->hasUser($user->id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Вы не участник этой беседы',
@@ -226,28 +227,28 @@ class ChatController extends Controller
     {
         try {
             $user = $request->user();
-            
-            if (!$user->isStudent()) {
+
+            if (! $user->isStudent()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Доступ только для учеников'
+                    'message' => 'Доступ только для учеников',
                 ], 403);
             }
-            
+
             $teachers = User::role('teacher')->get(['id', 'name', 'last_name', 'email', 'avatar']);
-            
+
             $chats = $teachers->map(function ($teacher) use ($user) {
-                $lastMessage = Message::where(function($q) use ($user, $teacher) {
+                $lastMessage = Message::where(function ($q) use ($user, $teacher) {
                     $q->where('sender_id', $user->id)->where('receiver_id', $teacher->id);
-                })->orWhere(function($q) use ($user, $teacher) {
+                })->orWhere(function ($q) use ($user, $teacher) {
                     $q->where('sender_id', $teacher->id)->where('receiver_id', $user->id);
                 })->latest()->first();
-                
+
                 $unreadCount = Message::where('sender_id', $teacher->id)
                     ->where('receiver_id', $user->id)
                     ->where('is_read', false)
                     ->count();
-                
+
                 return [
                     'teacher_id' => $teacher->id,
                     'full_name' => $teacher->full_name,
@@ -256,10 +257,10 @@ class ChatController extends Controller
                     'unread_count' => $unreadCount,
                 ];
             });
-            
+
             return response()->json([
                 'success' => true,
-                'chats' => $chats
+                'chats' => $chats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -285,8 +286,8 @@ class ChatController extends Controller
             $users = User::where('id', '!=', $currentUserId)
                 ->where(function ($q) use ($query) {
                     $q->where('name', 'LIKE', "%{$query}%")
-                      ->orWhere('last_name', 'LIKE', "%{$query}%")
-                      ->orWhere('email', 'LIKE', "%{$query}%");
+                        ->orWhere('last_name', 'LIKE', "%{$query}%")
+                        ->orWhere('email', 'LIKE', "%{$query}%");
                 })
                 ->with('roles')
                 ->limit(20)

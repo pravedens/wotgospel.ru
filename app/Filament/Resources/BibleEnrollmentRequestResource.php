@@ -1,49 +1,50 @@
 <?php
+
 // app/Filament/Resources/BibleEnrollmentRequestResource.php
 
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BibleEnrollmentRequestResource\Pages;
 use App\Models\BibleEnrollmentRequest;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class BibleEnrollmentRequestResource extends Resource
 {
     protected static ?string $model = BibleEnrollmentRequest::class;
-    
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-user-plus';
-    
+
     protected static UnitEnum|string|null $navigationGroup = 'Библейская школа';
-    
+
     protected static ?string $navigationLabel = 'Заявки на обучение';
-    
+
     protected static ?string $pluralModelLabel = 'Заявки на обучение';
-    
+
     protected static ?int $navigationSort = 5;
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('status', 'pending')->count() ?: null;
     }
-    
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -58,19 +59,19 @@ class BibleEnrollmentRequestResource extends Resource
                         ])
                         ->required()
                         ->reactive(),
-                    
+
                     Textarea::make('notes')
                         ->label('Дополнительная информация')
                         ->rows(3)
                         ->disabled()
                         ->visible(fn ($record) => $record && $record->notes),
-                    
+
                     Textarea::make('admin_notes')
                         ->label('Заметки администратора')
                         ->rows(3)
                         ->placeholder('Причина одобрения/отклонения...'),
                 ])->columns(1),
-            
+
             Section::make('Анкета ученика')
                 ->schema([
                     TextInput::make('city')
@@ -114,7 +115,7 @@ class BibleEnrollmentRequestResource extends Resource
                 ])->columns(2),
         ]);
     }
-    
+
     public static function table(Table $table): Table
     {
         return $table
@@ -123,30 +124,30 @@ class BibleEnrollmentRequestResource extends Resource
                     ->label('ID')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('user.full_name')
                     ->label('ФИО')
                     ->searchable()
                     ->sortable(),
-                
+
                 TextColumn::make('user.email')
                     ->label('Email')
                     ->searchable(),
-                
+
                 TextColumn::make('user.phone')
                     ->label('Телефон')
                     ->searchable(),
-                
+
                 TextColumn::make('city')
                     ->label('Город')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('church_name')
                     ->label('Церковь')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 BadgeColumn::make('status')
                     ->label('Статус')
                     ->colors([
@@ -160,12 +161,12 @@ class BibleEnrollmentRequestResource extends Resource
                         'rejected' => 'Отклонена',
                         default => $state,
                     }),
-                
+
                 TextColumn::make('created_at')
                     ->label('Дата подачи')
                     ->dateTime('d.m.Y H:i')
                     ->sortable(),
-                
+
                 TextColumn::make('reviewed_at')
                     ->label('Дата обработки')
                     ->dateTime('d.m.Y H:i')
@@ -196,7 +197,7 @@ class BibleEnrollmentRequestResource extends Resource
                             ->success()
                             ->send();
                     }),
-                
+
                 Action::make('reject')
                     ->label('Отклонить')
                     ->icon('heroicon-o-x-circle')
@@ -210,7 +211,7 @@ class BibleEnrollmentRequestResource extends Resource
                             ->warning()
                             ->send();
                     }),
-                
+
                 EditAction::make(),
                 DeleteAction::make(),
             ])
@@ -220,7 +221,7 @@ class BibleEnrollmentRequestResource extends Resource
                 ]),
             ]);
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -228,7 +229,7 @@ class BibleEnrollmentRequestResource extends Resource
             'edit' => Pages\EditBibleEnrollmentRequest::route('/{record}/edit'),
         ];
     }
-    
+
     public static function canCreate(): bool
     {
         return false;

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('order')->default(0);
             $table->boolean('is_published')->default(false);
             $table->timestamps();
-            
+
             $table->index('slug');
             $table->index('is_published');
             $table->index('order');

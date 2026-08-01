@@ -58,12 +58,12 @@ return [
         'sender' => env('SMS_SENDER', 'WoTNT'),
         'api_url' => env('SMS_API_URL', 'https://your-sms-gateway.com/send'),
     ],
-    
+
     'yandex' => [
-    'captcha' => [
-        'site_key' => env('YANDEX_CAPTCHA_SITE_KEY'),
-        'secret_key' => env('YANDEX_CAPTCHA_SECRET_KEY'),
+        'captcha' => [
+            'site_key' => env('YANDEX_CAPTCHA_SITE_KEY'),
+            'secret_key' => env('YANDEX_CAPTCHA_SECRET_KEY'),
+        ],
     ],
-],
 
 ];

@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/ConferenceService.php
 
 namespace App\Models;
@@ -20,7 +21,7 @@ class ConferenceService extends Model
         'capacity',
         'order',
     ];
-    
+
     protected $casts = [
         'service_date' => 'date',
         'start_time' => 'string',
@@ -28,12 +29,12 @@ class ConferenceService extends Model
         'capacity' => 'integer',
         'order' => 'integer',
     ];
-    
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
     }
-    
+
     public function getRegisteredCountAttribute(): int
     {
         return $this->event->registrations()
@@ -41,55 +42,65 @@ class ConferenceService extends Model
             ->whereJsonContains('selected_service_ids', $this->id)
             ->count();
     }
-    
+
     public function getAvailableCountAttribute(): int
     {
         return max(0, $this->capacity - $this->registered_count);
     }
-    
+
     public function getFormattedDateAttribute(): string
     {
-        if (!$this->service_date) return '';
+        if (! $this->service_date) {
+            return '';
+        }
+
         return Carbon::parse($this->service_date)->format('d.m.Y');
     }
-    
+
     public function getFormattedStartTimeAttribute(): string
     {
-        if (!$this->start_time) return '';
+        if (! $this->start_time) {
+            return '';
+        }
+
         // Если пришло время в формате H:i:s
         return substr($this->start_time, 0, 5);
     }
-    
+
     public function getFormattedEndTimeAttribute(): string
     {
-        if (!$this->end_time) return '';
+        if (! $this->end_time) {
+            return '';
+        }
+
         return substr($this->end_time, 0, 5);
     }
-    
+
     public function getTimeRangeAttribute(): string
     {
         if ($this->formatted_start_time && $this->formatted_end_time) {
-            return $this->formatted_start_time . ' - ' . $this->formatted_end_time;
+            return $this->formatted_start_time.' - '.$this->formatted_end_time;
         }
+
         return $this->formatted_start_time ?: '';
     }
-    
+
     public function getDisplayNameAttribute(): string
     {
         $parts = [];
-        
+
         if ($this->formatted_date) {
             $parts[] = $this->formatted_date;
         }
-        
+
         if ($this->title) {
             $parts[] = $this->title;
         }
-        
+
         if ($this->time_range) {
             $parts[] = $this->time_range;
         }
-        
+
         return implode(', ', $parts);
     }
 }

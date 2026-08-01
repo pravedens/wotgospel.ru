@@ -4,10 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PostResource\Pages;
 use App\Models\Post;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -15,34 +16,33 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use BackedEnum;
 use UnitEnum;
 
 class PostResource extends Resource
 {
     protected static ?string $model = Post::class;
-    
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-rectangle-stack';
-    
+
     protected static ?string $navigationLabel = 'Публикации';
-    
+
     protected static ?string $pluralModelLabel = 'Публикации';
-    
+
     protected static UnitEnum|string|null $navigationGroup = 'Проповеди';
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();
     }
-    
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -58,12 +58,12 @@ class PostResource extends Resource
             Select::make('group_id')->label('Год')->relationship('group', 'title')->required(),
             Textarea::make('description')->label('Кратко')->rows(3),
             Textarea::make('content')->label('Основное')->rows(3),
-            
+
             // Медиафайлы
             FileUpload::make('thumbnail')->label('Изображение')->image()->directory('posts/thumbnails')->disk('s3'),
             FileUpload::make('audio_file')->label('Аудио файл')->directory('posts/audio')->disk('s3')->maxSize(204800)->acceptedFileTypes(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a']),
             FileUpload::make('text_file')->label('Текстовый файл')->directory('posts/text')->disk('s3'),
-            
+
             // Ссылки на видео
             TextInput::make('youtube')->label('YouTube')->maxLength(255)->url(),
             TextInput::make('rutube')->label('Rutube')->maxLength(255)->url(),

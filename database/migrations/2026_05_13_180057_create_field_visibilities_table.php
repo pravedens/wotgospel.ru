@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('field_name');
             $table->boolean('is_visible')->default(true);
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'field_name']);
         });
     }

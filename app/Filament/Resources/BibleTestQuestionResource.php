@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BibleTestQuestionResource.php
 
 namespace App\Filament\Resources;
@@ -169,7 +170,7 @@ class BibleTestQuestionResource extends Resource
                             $courseTitle = $lesson->course?->title ?? 'Без курса';
 
                             return [
-                                $lesson->id => $courseTitle . ' - ' . $lesson->title,
+                                $lesson->id => $courseTitle.' - '.$lesson->title,
                             ];
                         })
                 )
@@ -178,99 +179,99 @@ class BibleTestQuestionResource extends Resource
                 ->reactive(),
 
             Select::make('type')
-    ->label('Тип вопроса')
-    ->options([
-        'single_choice' => 'Одиночный выбор',
-        'multiple_choice' => 'Множественный выбор',
-        'matching' => 'Соответствие',
-        'ordering' => 'Порядок событий (Drag & Drop)',
-        'odd_one_out' => 'Убрать лишнее',
-        'verse_reference' => 'Ввод ссылки на стих',
-        'select_verse' => 'Выбор стиха из предложенных',
-        'true_false' => 'Правда/Ложь',
-        'fill_blank' => 'Заполнить пропуски',
-    ])
-    ->required()
-    ->reactive()
-    ->afterStateUpdated(function (callable $set, $state, $get) {
-        // Получаем текущий config
-        $currentConfig = $get('config');
-        
-        // Если config уже существует и не null, не трогаем
-        if ($currentConfig !== null && $currentConfig !== '') {
-            return;
-        }
-        
-        // Инициализация config для разных типов ТОЛЬКО если он пустой
-        if ($state === 'verse_reference') {
-            $set('config', [
-                'expected_book' => '',
-                'expected_chapter' => null,
-                'expected_verse' => null,
-                'accept_alternative_notations' => true,
-            ]);
-        }
-        
-        if ($state === 'true_false') {
-            $set('config', [
-                'statement' => '',
-                'correct' => '1',
-                'explanation' => '',
-            ]);
-        }
-        
-        if ($state === 'single_choice') {
-            $set('config', [
-                'options' => [],
-                'correct' => null,
-                'randomize' => true,
-            ]);
-        }
-        
-        if ($state === 'multiple_choice') {
-            $set('config', [
-                'options' => [],
-                'randomize' => true,
-            ]);
-        }
-        
-        if ($state === 'fill_blank') {
-            $set('config', [
-                'text' => '',
-                'answers' => [],
-                'case_sensitive' => false,
-            ]);
-        }
-        
-        if ($state === 'odd_one_out') {
-            $set('config', [
-                'items' => [],
-                'correct_odd' => null,
-                'explanation' => '',
-            ]);
-        }
-        
-        if ($state === 'matching') {
-            $set('config', [
-                'left' => [],
-                'right' => [],
-                'matches' => [],
-            ]);
-        }
-        
-        if ($state === 'ordering') {
-            $set('config', [
-                'items' => [],
-            ]);
-        }
-        
-        if ($state === 'select_verse') {
-            $set('config', [
-                'options' => [],
-                'correct' => null,
-            ]);
-        }
-    }),
+                ->label('Тип вопроса')
+                ->options([
+                    'single_choice' => 'Одиночный выбор',
+                    'multiple_choice' => 'Множественный выбор',
+                    'matching' => 'Соответствие',
+                    'ordering' => 'Порядок событий (Drag & Drop)',
+                    'odd_one_out' => 'Убрать лишнее',
+                    'verse_reference' => 'Ввод ссылки на стих',
+                    'select_verse' => 'Выбор стиха из предложенных',
+                    'true_false' => 'Правда/Ложь',
+                    'fill_blank' => 'Заполнить пропуски',
+                ])
+                ->required()
+                ->reactive()
+                ->afterStateUpdated(function (callable $set, $state, $get) {
+                    // Получаем текущий config
+                    $currentConfig = $get('config');
+
+                    // Если config уже существует и не null, не трогаем
+                    if ($currentConfig !== null && $currentConfig !== '') {
+                        return;
+                    }
+
+                    // Инициализация config для разных типов ТОЛЬКО если он пустой
+                    if ($state === 'verse_reference') {
+                        $set('config', [
+                            'expected_book' => '',
+                            'expected_chapter' => null,
+                            'expected_verse' => null,
+                            'accept_alternative_notations' => true,
+                        ]);
+                    }
+
+                    if ($state === 'true_false') {
+                        $set('config', [
+                            'statement' => '',
+                            'correct' => '1',
+                            'explanation' => '',
+                        ]);
+                    }
+
+                    if ($state === 'single_choice') {
+                        $set('config', [
+                            'options' => [],
+                            'correct' => null,
+                            'randomize' => true,
+                        ]);
+                    }
+
+                    if ($state === 'multiple_choice') {
+                        $set('config', [
+                            'options' => [],
+                            'randomize' => true,
+                        ]);
+                    }
+
+                    if ($state === 'fill_blank') {
+                        $set('config', [
+                            'text' => '',
+                            'answers' => [],
+                            'case_sensitive' => false,
+                        ]);
+                    }
+
+                    if ($state === 'odd_one_out') {
+                        $set('config', [
+                            'items' => [],
+                            'correct_odd' => null,
+                            'explanation' => '',
+                        ]);
+                    }
+
+                    if ($state === 'matching') {
+                        $set('config', [
+                            'left' => [],
+                            'right' => [],
+                            'matches' => [],
+                        ]);
+                    }
+
+                    if ($state === 'ordering') {
+                        $set('config', [
+                            'items' => [],
+                        ]);
+                    }
+
+                    if ($state === 'select_verse') {
+                        $set('config', [
+                            'options' => [],
+                            'correct' => null,
+                        ]);
+                    }
+                }),
             Textarea::make('question')
                 ->label('Текст вопроса')
                 ->rows(5)
@@ -328,40 +329,40 @@ class BibleTestQuestionResource extends Resource
                 ->visible(fn ($get) => $get('type') === 'single_choice'),
 
             // ========== 2. Множественный выбор ==========
-Group::make()
-    ->schema([
-        Repeater::make('options')
-            ->label('Варианты ответов')
-            ->schema([
-                TextInput::make('text')
-                    ->label('Текст варианта')
-                    ->required()
-                    ->formatStateUsing(fn ($state) => self::normalizeTextState($state))
-                    ->dehydrateStateUsing(fn ($state) => trim((string) $state))
-                    ->live(onBlur: true),
+            Group::make()
+                ->schema([
+                    Repeater::make('options')
+                        ->label('Варианты ответов')
+                        ->schema([
+                            TextInput::make('text')
+                                ->label('Текст варианта')
+                                ->required()
+                                ->formatStateUsing(fn ($state) => self::normalizeTextState($state))
+                                ->dehydrateStateUsing(fn ($state) => trim((string) $state))
+                                ->live(onBlur: true),
 
-                Toggle::make('is_correct')
-                    ->label('Правильный ответ')
-                    ->default(false),
-            ])
-            ->addActionLabel('Добавить вариант')
-            ->minItems(2)
-            ->defaultItems(2)
-            ->reorderable()
-            ->live()
-            ->columnSpanFull(),
+                            Toggle::make('is_correct')
+                                ->label('Правильный ответ')
+                                ->default(false),
+                        ])
+                        ->addActionLabel('Добавить вариант')
+                        ->minItems(2)
+                        ->defaultItems(2)
+                        ->reorderable()
+                        ->live()
+                        ->columnSpanFull(),
 
-        Toggle::make('randomize')
-            ->label('Перемешивать варианты')
-            ->default(true),
-            
-        // Скрытое поле для хранения правильных ответов
-        TextInput::make('correct')
-            ->hidden()
-            ->default('[]'),
-    ])
-    ->statePath('config')
-    ->visible(fn ($get) => $get('type') === 'multiple_choice'),
+                    Toggle::make('randomize')
+                        ->label('Перемешивать варианты')
+                        ->default(true),
+
+                    // Скрытое поле для хранения правильных ответов
+                    TextInput::make('correct')
+                        ->hidden()
+                        ->default('[]'),
+                ])
+                ->statePath('config')
+                ->visible(fn ($get) => $get('type') === 'multiple_choice'),
 
             // ========== 3. Соответствие ==========
             Group::make()
@@ -738,43 +739,43 @@ Group::make()
         }
 
         if (($data['type'] ?? null) === 'multiple_choice') {
-    $options = $data['config']['options'] ?? [];
+            $options = $data['config']['options'] ?? [];
 
-    if (! is_array($options)) {
-        $options = [];
-    }
+            if (! is_array($options)) {
+                $options = [];
+            }
 
-    $correct = [];
-    $normalizedOptions = [];
+            $correct = [];
+            $normalizedOptions = [];
 
-    foreach ($options as $option) {
-        $text = is_array($option)
-            ? self::normalizeTextState($option['text'] ?? $option)
-            : self::normalizeTextState($option);
+            foreach ($options as $option) {
+                $text = is_array($option)
+                    ? self::normalizeTextState($option['text'] ?? $option)
+                    : self::normalizeTextState($option);
 
-        if ($text === '') {
-            continue;
+                if ($text === '') {
+                    continue;
+                }
+
+                $isCorrect = is_array($option) && (bool) ($option['is_correct'] ?? false);
+
+                if ($isCorrect) {
+                    $correct[] = $text;
+                }
+
+                $normalizedOptions[] = [
+                    'text' => $text,
+                    'is_correct' => $isCorrect,
+                ];
+            }
+
+            $data['config']['options'] = $normalizedOptions;
+            $data['config']['correct'] = array_values(array_unique($correct));
+            $data['config']['randomize'] = (bool) ($data['config']['randomize'] ?? true);
+
+            // Удаляем временное поле, если оно есть
+            unset($data['config']['_correct']);
         }
-
-        $isCorrect = is_array($option) && (bool) ($option['is_correct'] ?? false);
-
-        if ($isCorrect) {
-            $correct[] = $text;
-        }
-
-        $normalizedOptions[] = [
-            'text' => $text,
-            'is_correct' => $isCorrect,
-        ];
-    }
-
-    $data['config']['options'] = $normalizedOptions;
-    $data['config']['correct'] = array_values(array_unique($correct));
-    $data['config']['randomize'] = (bool) ($data['config']['randomize'] ?? true);
-    
-    // Удаляем временное поле, если оно есть
-    unset($data['config']['_correct']);
-}
 
         if (($data['type'] ?? null) === 'matching') {
             foreach (['left', 'right'] as $side) {
@@ -974,7 +975,7 @@ Group::make()
             return $value;
         }
 
-        return 'answer_' . rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+        return 'answer_'.rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
     }
 
     public static function decodeAnswerValue(mixed $value): ?string

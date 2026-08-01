@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('device_id');
         });

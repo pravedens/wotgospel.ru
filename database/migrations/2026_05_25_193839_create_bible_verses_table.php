@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('text');
             $table->string('book_abbr', 20)->nullable(); // "Ин.", "Быт."
             $table->timestamps();
-            
+
             $table->index(['book', 'chapter', 'verse']);
             $table->index('book_abbr');
         });

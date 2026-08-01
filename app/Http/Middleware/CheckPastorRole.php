@@ -12,17 +12,17 @@ class CheckPastorRole
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
-        if (!$user->isPastor() && !$user->isSuperAdmin()) {
+        if (! $user->isPastor() && ! $user->isSuperAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Доступ только для пасторов'
+                'message' => 'Доступ только для пасторов',
             ], 403);
         }
 

@@ -16,18 +16,18 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // users.id - bigint unsigned
             $table->unsignedBigInteger('post_id'); // posts.id - int unsigned
             $table->timestamps();
-            
+
             // Внешние ключи с правильными типами
             $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
-                  
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->foreign('post_id')
-                  ->references('id')
-                  ->on('posts')
-                  ->onDelete('cascade');
-            
+                ->references('id')
+                ->on('posts')
+                ->onDelete('cascade');
+
             // Уникальный индекс
             $table->unique(['user_id', 'post_id']);
         });

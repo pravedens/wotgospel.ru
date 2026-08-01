@@ -1,4 +1,5 @@
 <?php
+
 // app/Filament/Resources/BiblePartyResource/Pages/CreateBibleParty.php
 
 namespace App\Filament\Resources\BiblePartyResource\Pages;

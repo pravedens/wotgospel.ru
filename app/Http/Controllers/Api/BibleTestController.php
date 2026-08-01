@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/BibleTestController.php
 
 namespace App\Http\Controllers\Api;
@@ -18,55 +19,55 @@ class BibleTestController extends Controller
      * Получить тест для урока
      */
     public function show($lessonSlug)
-{
-    $lesson = BibleLesson::where('slug', $lessonSlug)
-        ->where('is_published', true)
-        ->firstOrFail();
+    {
+        $lesson = BibleLesson::where('slug', $lessonSlug)
+            ->where('is_published', true)
+            ->firstOrFail();
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    if (! $user || ! $user->isStudent()) {
+        if (! $user || ! $user->isStudent()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Доступ только для учеников',
+            ], 403);
+        }
+
+        $progress = BibleUserLessonProgress::where('user_id', $user->id)
+            ->where('lesson_id', $lesson->id)
+            ->first();
+
+        // Тест доступен только после практики
+        if (! $progress || $progress->status !== 'practice_completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Сначала выполните практическое задание',
+            ], 403);
+        }
+
+        $questions = $lesson->questions()
+            ->orderBy('order')
+            ->get(['id', 'type', 'question', 'config', 'points', 'order']);
+
+        foreach ($questions as $question) {
+            // ✅ Декодируем config из JSON строки в массив
+            $config = is_string($question->config)
+                ? json_decode($question->config, true)
+                : ($question->config ?? []);
+
+            $question->config = $this->sanitizeQuestionConfigForStudent(
+                $question->type,
+                $config
+            );
+        }
+
         return response()->json([
-            'success' => false,
-            'message' => 'Доступ только для учеников',
-        ], 403);
+            'success' => true,
+            'lesson_id' => $lesson->id,
+            'lesson_title' => $lesson->title,
+            'questions' => $questions,
+        ]);
     }
-
-    $progress = BibleUserLessonProgress::where('user_id', $user->id)
-        ->where('lesson_id', $lesson->id)
-        ->first();
-
-    // Тест доступен только после практики
-    if (! $progress || $progress->status !== 'practice_completed') {
-        return response()->json([
-            'success' => false,
-            'message' => 'Сначала выполните практическое задание',
-        ], 403);
-    }
-
-    $questions = $lesson->questions()
-        ->orderBy('order')
-        ->get(['id', 'type', 'question', 'config', 'points', 'order']);
-
-    foreach ($questions as $question) {
-        // ✅ Декодируем config из JSON строки в массив
-        $config = is_string($question->config) 
-            ? json_decode($question->config, true) 
-            : ($question->config ?? []);
-        
-        $question->config = $this->sanitizeQuestionConfigForStudent(
-            $question->type,
-            $config
-        );
-    }
-
-    return response()->json([
-        'success' => true,
-        'lesson_id' => $lesson->id,
-        'lesson_title' => $lesson->title,
-        'questions' => $questions,
-    ]);
-}
 
     /**
      * Отправить ответы на тест
@@ -161,7 +162,7 @@ class BibleTestController extends Controller
 
         try {
             foreach ($lessonQuestions as $question) {
-    
+
                 $answer = $submittedAnswers->get($question->id);
                 $value = $answer['value'] ?? null;
 
@@ -243,7 +244,7 @@ class BibleTestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка при сохранении теста: ' . $e->getMessage(),
+                'message' => 'Ошибка при сохранении теста: '.$e->getMessage(),
             ], 500);
         }
     }

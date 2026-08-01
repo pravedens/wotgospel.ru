@@ -1,22 +1,21 @@
 <?php
 
 namespace App\Filament\Resources;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 
 use App\Filament\Resources\PermissionResource\Pages;
+use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Spatie\Permission\Models\Permission;
 use UnitEnum;
-use BackedEnum;
 
 class PermissionResource extends Resource
 {
@@ -29,7 +28,7 @@ class PermissionResource extends Resource
     protected static ?int $navigationSort = 2;
 
     /* ===================== FORM (Filament 4) ===================== */
-    
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
@@ -39,14 +38,14 @@ class PermissionResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->maxLength(255)
                 ->helperText('Формат: действие_ресурс (например: view_event, create_post)'),
-                
+
             Select::make('roles')
                 ->label('Роли')
                 ->multiple()
                 ->relationship('roles', 'name')
                 ->preload()
                 ->searchable(),
-                
+
             TextInput::make('guard_name')
                 ->label('Guard')
                 ->default('web')
@@ -64,7 +63,7 @@ class PermissionResource extends Resource
                 TextColumn::make('id')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 TextColumn::make('name')
                     ->label('Разрешение')
                     ->searchable()
@@ -72,7 +71,7 @@ class PermissionResource extends Resource
                     ->formatStateUsing(fn ($state) => str($state)
                         ->replace('_', ' ')
                         ->title()),
-                        
+
                 TextColumn::make('roles.name')
                     ->label('Роли')
                     ->badge()
@@ -87,7 +86,7 @@ class PermissionResource extends Resource
                     ->listWithLineBreaks()
                     ->limitList(3)
                     ->expandableLimitedList(),
-                    
+
                 TextColumn::make('guard_name')
                     ->label('Guard')
                     ->badge()
@@ -124,7 +123,7 @@ class PermissionResource extends Resource
     {
         return static::getModel()::count();
     }
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         // Только суперадмин видит раздел Permissions

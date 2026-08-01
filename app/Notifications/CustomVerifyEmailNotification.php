@@ -3,11 +3,11 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
 
 class CustomVerifyEmailNotification extends Notification
 {
@@ -24,7 +24,7 @@ class CustomVerifyEmailNotification extends Notification
 
         return (new MailMessage)
             ->subject('Подтверждение email адреса')
-            ->greeting('Здравствуйте, ' . $notifiable->name . '!')
+            ->greeting('Здравствуйте, '.$notifiable->name.'!')
             ->line('Благодарим вас за регистрацию на нашем сайте.')
             ->line('Для подтверждения вашего email адреса, пожалуйста, нажмите кнопку ниже:')
             ->action('Подтвердить email', $verificationUrl)

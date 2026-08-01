@@ -15,7 +15,7 @@ class ConferenceController extends Controller
 
     public function filtered(Request $request)
     {
-        $query = Conference::withCount(['posts' => function($q) use ($request) {
+        $query = Conference::withCount(['posts' => function ($q) use ($request) {
             if ($request->has('category_id')) {
                 $q->where('category_id', $request->category_id);
             }
@@ -23,9 +23,9 @@ class ConferenceController extends Controller
                 $q->where('group_id', $request->group_id);
             }
         }]);
-        
+
         return $query->having('posts_count', '>', 0)
-                     ->orderBy('title')
-                     ->get();
+            ->orderBy('title')
+            ->get();
     }
 }

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 
 class ForgotPasswordController extends Controller
 {
@@ -19,7 +19,7 @@ class ForgotPasswordController extends Controller
         Log::info('Request data:', [
             'email' => $request->email,
             'ip' => $request->ip(),
-            'user_agent' => $request->userAgent()
+            'user_agent' => $request->userAgent(),
         ]);
 
         $validator = Validator::make($request->all(), [
@@ -29,11 +29,12 @@ class ForgotPasswordController extends Controller
         if ($validator->fails()) {
             Log::error('Forgot password validation failed', [
                 'errors' => $validator->errors()->toArray(),
-                'email' => $request->email
+                'email' => $request->email,
             ]);
+
             return response()->json([
                 'message' => 'Ошибка валидации',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -46,24 +47,25 @@ class ForgotPasswordController extends Controller
         Log::info('Send reset link status', [
             'status' => $status,
             'email' => $request->email,
-            'status_message' => $this->getStatusMessage($status)
+            'status_message' => $this->getStatusMessage($status),
         ]);
 
         if ($status === Password::RESET_LINK_SENT) {
             Log::info('Reset link sent successfully to:', ['email' => $request->email]);
+
             return response()->json([
-                'message' => 'Ссылка для сброса пароля отправлена на ваш email'
+                'message' => 'Ссылка для сброса пароля отправлена на ваш email',
             ]);
         }
 
         Log::error('Failed to send reset link', [
             'email' => $request->email,
             'status' => $status,
-            'status_message' => $this->getStatusMessage($status)
+            'status_message' => $this->getStatusMessage($status),
         ]);
 
         return response()->json([
-            'message' => 'Не удалось отправить ссылку для сброса пароля'
+            'message' => 'Не удалось отправить ссылку для сброса пароля',
         ], 500);
     }
 
@@ -77,7 +79,7 @@ class ForgotPasswordController extends Controller
             Password::RESET_THROTTLED => 'RESET_THROTTLED - Слишком много попыток',
             Password::INVALID_USER => 'INVALID_USER - Пользователь не найден',
         ];
-        
+
         return $messages[$status] ?? 'UNKNOWN_STATUS';
     }
 }

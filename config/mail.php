@@ -38,7 +38,7 @@ return [
     'mailers' => [
 
         'smtp' => [
-    'transport' => 'smtp',
+            'transport' => 'smtp',
             'host' => env('MAIL_HOST', 'app.debugmail.io'),
             'port' => env('MAIL_PORT', 25),
             'encryption' => env('MAIL_ENCRYPTION', 'null'),
@@ -47,16 +47,16 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
 
-    // Добавляем этот блок для обхода проблем с SSL
-    'stream' => [
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-            'allow_self_signed' => true,
-            'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT,
+            // Добавляем этот блок для обхода проблем с SSL
+            'stream' => [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                    'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT,
+                ],
+            ],
         ],
-    ],
-],
 
         'ses' => [
             'transport' => 'ses',

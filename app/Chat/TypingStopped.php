@@ -13,6 +13,7 @@ class TypingStopped implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public int $conversationId;
+
     public int $userId;
 
     public function __construct(int $conversationId, int $userId)

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TeacherMessage extends Model
 {
     protected $table = 'teacher_messages';
-    
+
     protected $fillable = [
         'teacher_id',
         'user_id',
@@ -20,12 +20,12 @@ class TeacherMessage extends Model
         'ip_address',
         'user_agent',
     ];
-    
+
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
     ];
-    
+
     /**
      * Связь с учителем (получателем)
      */
@@ -33,7 +33,7 @@ class TeacherMessage extends Model
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
-    
+
     /**
      * Связь с отправителем (если авторизован)
      */
@@ -41,20 +41,20 @@ class TeacherMessage extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    
+
     /**
      * Отметить сообщение как прочитанное
      */
     public function markAsRead(): void
     {
-        if (!$this->is_read) {
+        if (! $this->is_read) {
             $this->update([
                 'is_read' => true,
                 'read_at' => now(),
             ]);
         }
     }
-    
+
     /**
      * Отметить как непрочитанное
      */
@@ -67,7 +67,7 @@ class TeacherMessage extends Model
             ]);
         }
     }
-    
+
     /**
      * Scope для непрочитанных сообщений
      */
@@ -75,7 +75,7 @@ class TeacherMessage extends Model
     {
         return $query->where('is_read', false);
     }
-    
+
     /**
      * Scope для прочитанных сообщений
      */
@@ -83,7 +83,7 @@ class TeacherMessage extends Model
     {
         return $query->where('is_read', true);
     }
-    
+
     /**
      * Scope для сообщений конкретному учителю
      */

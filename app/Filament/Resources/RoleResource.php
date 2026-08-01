@@ -2,53 +2,50 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-
-use Filament\Forms\Components\Select;
-use Filament\Schemas\Schema;
-use Filament\Tables;
-
 use App\Filament\Resources\RoleResource\Pages;
+use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Spatie\Permission\Models\Role;
-use BackedEnum;
 use UnitEnum;
 
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-shield-check';
 
     protected static UnitEnum|string|null $navigationGroup = 'Администрирование';
+
     protected static ?string $navigationLabel = 'Роли';
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();
     }
-    
+
     public static function form(Schema $schema): Schema
     {
         return $schema->schema([
 
-                TextInput::make('name')
-                    ->label('Название роли')
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
-                TextInput::make('guard_name')
-                    ->label('Guard Name')
-                    ->default('web')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+            TextInput::make('name')
+                ->label('Название роли')
+                ->required()
+                ->unique(ignoreRecord: true)
+                ->maxLength(255),
+            TextInput::make('guard_name')
+                ->label('Guard Name')
+                ->default('web')
+                ->required()
+                ->maxLength(255),
+        ]);
     }
 
     public static function table(Table $table): Table

@@ -14,6 +14,7 @@ class MessageSent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public Message $message;
+
     public int $conversationId;
 
     public function __construct(Message $message, int $conversationId)

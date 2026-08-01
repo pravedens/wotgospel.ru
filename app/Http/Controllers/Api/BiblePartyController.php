@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/BiblePartyController.php
 
 namespace App\Http\Controllers\Api;
@@ -13,12 +14,12 @@ use Illuminate\Support\Facades\Auth;
 class BiblePartyController extends Controller
 {
     protected $censorService;
-    
+
     public function __construct(CensorService $censorService)
     {
         $this->censorService = $censorService;
     }
-    
+
     /**
      * Информация о текущей группе пользователя
      */
@@ -26,13 +27,13 @@ class BiblePartyController extends Controller
     {
         $user = Auth::user();
         $party = $user->bibleActiveParty();
-        
-        if (!$party) {
+
+        if (! $party) {
             return response()->json(['success' => true, 'has_party' => false]);
         }
-        
+
         $isLeader = $party->leader_id === $user->id;
-        
+
         $partyData = [
             'id' => $party->id,
             'name' => $party->name,
@@ -47,29 +48,29 @@ class BiblePartyController extends Controller
             'current_students' => $party->activeStudents()->count(),
             'is_leader' => $isLeader,
             'leader_id' => $party->leader_id,
-            'is_active' => $party->is_active
+            'is_active' => $party->is_active,
         ];
-        
+
         if ($isLeader) {
             $students = $party->activeStudents()
                 ->with('bibleProgress')
                 ->get(['users.id', 'users.name', 'users.last_name', 'users.email']);
-            
+
             foreach ($students as $student) {
                 $student->full_name = $student->full_name;
                 $student->course_progress = $student->getCourseProgress($party->course_id);
             }
-            
+
             $partyData['students'] = $students;
         }
-        
+
         return response()->json([
             'success' => true,
             'has_party' => true,
-            'party' => $partyData
+            'party' => $partyData,
         ]);
     }
-    
+
     /**
      * Получить сообщения чата
      */
@@ -77,32 +78,32 @@ class BiblePartyController extends Controller
     {
         $user = Auth::user();
         $party = $user->bibleActiveParty();
-        
-        if (!$party) {
+
+        if (! $party) {
             return response()->json([
                 'success' => false,
-                'message' => 'Вы не состоите в группе'
+                'message' => 'Вы не состоите в группе',
             ], 404);
         }
-        
+
         $messages = BiblePartyMessage::where('party_id', $party->id)
             ->with('user:id,name,last_name,avatar')
             ->orderBy('created_at', 'asc')
             ->get(['id', 'user_id', 'message', 'created_at', 'is_censored']);
-        
+
         // Если сообщение было подвергнуто цензуре, показываем звёздочки
         foreach ($messages as $message) {
             if ($message->is_censored) {
                 $message->message = $this->censorService->censor($message->message);
             }
         }
-        
+
         return response()->json([
             'success' => true,
-            'messages' => $messages
+            'messages' => $messages,
         ]);
     }
-    
+
     /**
      * Отправить сообщение с цензурой
      */
@@ -110,60 +111,60 @@ class BiblePartyController extends Controller
     {
         $user = Auth::user();
         $party = $user->bibleActiveParty();
-        
-        if (!$party) {
+
+        if (! $party) {
             return response()->json([
                 'success' => false,
-                'message' => 'Вы не состоите в группе'
+                'message' => 'Вы не состоите в группе',
             ], 404);
         }
-        
+
         // Чат закрыт, если нет лидера
-        if (!$party->leader_id) {
+        if (! $party->leader_id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Чат недоступен: не назначен лидер группы'
+                'message' => 'Чат недоступен: не назначен лидер группы',
             ], 403);
         }
-        
+
         // Чат закрыт, если меньше 2 участников (включая лидера)
         if ($party->activeStudents()->count() < 2) {
             return response()->json([
                 'success' => false,
-                'message' => 'Чат недоступен: недостаточно участников'
+                'message' => 'Чат недоступен: недостаточно участников',
             ], 403);
         }
-        
+
         $request->validate([
-            'message' => 'required|string|max:5000'
+            'message' => 'required|string|max:5000',
         ]);
-        
+
         $originalMessage = $request->message;
         $isCensored = $this->censorService->containsProfanity($originalMessage);
-        
+
         if ($isCensored) {
             // Не пропускаем сообщение с матом
             return response()->json([
                 'success' => false,
-                'message' => 'Сообщение содержит нецензурные слова или оскорбления. Оно не будет отправлено.'
+                'message' => 'Сообщение содержит нецензурные слова или оскорбления. Оно не будет отправлено.',
             ], 422);
         }
-        
+
         $message = BiblePartyMessage::create([
             'party_id' => $party->id,
             'user_id' => $user->id,
             'message' => $originalMessage,
             'is_approved' => true,
-            'is_censored' => false
+            'is_censored' => false,
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Сообщение отправлено',
-            'message_id' => $message->id
+            'message_id' => $message->id,
         ]);
     }
-    
+
     /**
      * Удалить сообщение (только для лидера или учителя)
      */
@@ -172,22 +173,22 @@ class BiblePartyController extends Controller
         $user = Auth::user();
         $message = BiblePartyMessage::findOrFail($messageId);
         $party = $message->party;
-        
-        if ($party->leader_id !== $user->id && !$user->hasRole('teacher')) {
+
+        if ($party->leader_id !== $user->id && ! $user->hasRole('teacher')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только лидер группы или учитель могут удалять сообщения'
+                'message' => 'Только лидер группы или учитель могут удалять сообщения',
             ], 403);
         }
-        
+
         $message->delete();
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Сообщение удалено'
+            'message' => 'Сообщение удалено',
         ]);
     }
-    
+
     /**
      * Удалить участника из группы (только для лидера)
      */
@@ -195,81 +196,81 @@ class BiblePartyController extends Controller
     {
         $user = Auth::user();
         $party = $user->bibleActiveParty();
-        
-        if (!$party || $party->leader_id !== $user->id) {
+
+        if (! $party || $party->leader_id !== $user->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только лидер группы может удалять участников'
+                'message' => 'Только лидер группы может удалять участников',
             ], 403);
         }
-        
+
         if ($userId == $user->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Лидер не может удалить сам себя'
+                'message' => 'Лидер не может удалить сам себя',
             ], 422);
         }
-        
+
         $party->removeStudent($userId);
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Участник удалён из группы'
+            'message' => 'Участник удалён из группы',
         ]);
     }
-    
+
     /**
      * Вступить в группу по коду
      */
     public function join(Request $request)
     {
         $user = Auth::user();
-        
-        if (!$user->isStudent()) {
+
+        if (! $user->isStudent()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только ученики могут вступать в группы'
+                'message' => 'Только ученики могут вступать в группы',
             ], 403);
         }
-        
+
         $request->validate([
-            'join_code' => 'required|string|size:6'
+            'join_code' => 'required|string|size:6',
         ]);
-        
+
         $party = BibleParty::where('join_code', strtoupper($request->join_code))
             ->where('is_active', true)
             ->first();
-        
-        if (!$party) {
+
+        if (! $party) {
             return response()->json([
                 'success' => false,
-                'message' => 'Неверный код приглашения'
+                'message' => 'Неверный код приглашения',
             ], 404);
         }
-        
+
         if ($user->bibleActiveParty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Вы уже состоите в группе'
+                'message' => 'Вы уже состоите в группе',
             ], 422);
         }
-        
+
         if ($party->activeStudents()->count() >= $party->max_students) {
             return response()->json([
                 'success' => false,
-                'message' => 'Группа достигла максимального количества участников'
+                'message' => 'Группа достигла максимального количества участников',
             ], 422);
         }
-        
+
         $party->addStudent($user->id);
-        
+
         return response()->json([
             'success' => true,
             'message' => "Вы вступили в группу \"{$party->name}\"",
-            'party' => $party
+            'party' => $party,
         ]);
     }
-    
+
     /**
      * Выйти из группы
      */
@@ -277,19 +278,19 @@ class BiblePartyController extends Controller
     {
         $user = Auth::user();
         $party = $user->bibleActiveParty();
-        
-        if (!$party) {
+
+        if (! $party) {
             return response()->json([
                 'success' => false,
-                'message' => 'Вы не состоите в группе'
+                'message' => 'Вы не состоите в группе',
             ], 404);
         }
-        
+
         $party->removeStudent($user->id);
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Вы вышли из группы'
+            'message' => 'Вы вышли из группы',
         ]);
     }
 }

@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('event_registrations', function (Blueprint $table) {
             $table->id();
-            
+
             // Временно без foreign key constraints
             $table->unsignedBigInteger('event_id');
             $table->unsignedBigInteger('user_id');
-            
+
             $table->json('selected_service_ids')->nullable();
             $table->unsignedSmallInteger('services_count')->default(0);
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'waiting'])->default('pending');
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('processed_at')->nullable();
             $table->text('admin_notes')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['event_id', 'user_id']);
             $table->index('status');
             $table->index('event_id');
