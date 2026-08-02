@@ -210,6 +210,10 @@ class Event extends Model
                     $event->startTime = $firstService->start_time;
                 }
             }
+            // Если изменилась startDate — пересчитываем компоненты
+            if ($event->isDirty('startDate') && $event->startDate) {
+                $event->fillDateComponents();
+            }
         });
     }
 
@@ -548,11 +552,6 @@ class Event extends Model
             if ($deleted) {
                 // Опционально: очистить поле thumbnail в БД
                 // $this->update(['thumbnail' => null]);
-
-                \Log::info('Thumbnail deleted from S3', [
-                    'event_id' => $this->id,
-                    'path' => $this->thumbnail,
-                ]);
             }
 
             return $deleted;
