@@ -142,4 +142,16 @@ class BibleUserLessonProgress extends Model
             $this->save();
         }
     }
+
+    public function markContentCompleted(): void
+{
+    if (in_array($this->status, [
+        self::STATUS_NOT_STARTED,
+        self::STATUS_CALL_COMPLETED,
+        self::STATUS_SCRIPTURE_COMPLETED
+    ])) {
+        $this->status = self::STATUS_SCRIPTURE_COMPLETED;
+        $this->save();
+    }
+}
 }

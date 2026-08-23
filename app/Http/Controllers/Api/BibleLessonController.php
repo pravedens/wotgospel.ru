@@ -128,6 +128,42 @@ class BibleLessonController extends Controller
         return $this->updateProgress($slug, 'markPracticeCompleted');
     }
 
+    public function markContentCompleted($slug)
+{
+    $lesson = BibleLesson::where('slug', $slug)
+        ->where('is_published', true)
+        ->firstOrFail();
+
+    $user = Auth::user();
+
+    if (!$user || !$user->isEnrolledInSchool()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Доступ только для учеников школы',
+        ], 403);
+    }
+
+    if ($this->isLessonLocked($lesson, $user->id)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Этот урок заблокирован',
+        ], 403);
+    }
+
+    $progress = BibleUserLessonProgress::firstOrCreate([
+        'user_id' => $user->id,
+        'lesson_id' => $lesson->id,
+    ]);
+
+    $progress->markContentCompleted();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Прогресс обновлён',
+        'status' => $progress->status,
+    ]);
+}
+
     /**
      * Универсальный метод обновления прогресса
      */

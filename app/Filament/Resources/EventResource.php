@@ -143,23 +143,16 @@ class EventResource extends Resource
                     if ($optimizedPath) {
                         if ($record && $record->thumbnail) {
                             Storage::disk('s3')->delete($record->thumbnail);
-                            \Log::info('Old thumbnail deleted on update', ['path' => $record->thumbnail]);
                         }
 
                         return $optimizedPath;
                     }
-
-                    \Log::warning('Image optimization failed in Filament, using original', [
-                        'original_name' => $file->getClientOriginalName(),
-                        'original_size' => $file->getSize(),
-                    ]);
 
                     return $file->store('events/thumbnails', 's3');
                 })
                 ->deleteUploadedFileUsing(function ($file, $record) {
                     if ($record && $record->thumbnail) {
                         Storage::disk('s3')->delete($record->thumbnail);
-                        \Log::info('Thumbnail deleted via deleteUploadedFileUsing', ['path' => $record->thumbnail]);
                     }
                 })
                 ->columnSpanFull(),
@@ -351,7 +344,6 @@ class EventResource extends Resource
                     ->action(function (Event $record) {
                         if ($record->thumbnail) {
                             Storage::disk('s3')->delete($record->thumbnail);
-                            \Log::info('Thumbnail deleted on record delete', ['path' => $record->thumbnail]);
                         }
                         $record->delete();
 
@@ -368,7 +360,6 @@ class EventResource extends Resource
                             foreach ($records as $record) {
                                 if ($record->thumbnail) {
                                     Storage::disk('s3')->delete($record->thumbnail);
-                                    \Log::info('Thumbnail deleted on bulk delete', ['path' => $record->thumbnail]);
                                 }
                                 $record->delete();
                             }

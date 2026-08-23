@@ -341,6 +341,7 @@ Route::prefix('bible-school')->group(function () {
         Route::post('/lessons/{lesson:slug}/video-watch', [BibleLessonController::class, 'markVideoWatched']);
         Route::post('/lessons/{lesson:slug}/practice', [BibleLessonController::class, 'markPracticeCompleted']);
         Route::get('/lessons/{lesson:slug}/download', [BibleLessonController::class, 'downloadPdf']);
+        Route::post('/lessons/{lesson:slug}/content', [BibleLessonController::class, 'markContentCompleted']);
 
         // Тесты
         Route::get('/lessons/{lesson:slug}/test', [BibleTestController::class, 'show']);
