@@ -73,6 +73,7 @@ class BibleLessonController extends Controller
                 'scripture_verses' => $lesson->scripture_verses,
                 'content' => $lesson->content,
                 'practice_task' => $lesson->practice_task,
+                'requires_essay' => (bool) $lesson->requires_essay,
                 'videos' => $lesson->videos->map(fn ($v) => [
                     'id' => $v->id,
                     'title' => $v->title,
@@ -129,40 +130,40 @@ class BibleLessonController extends Controller
     }
 
     public function markContentCompleted($slug)
-{
-    $lesson = BibleLesson::where('slug', $slug)
-        ->where('is_published', true)
-        ->firstOrFail();
+    {
+        $lesson = BibleLesson::where('slug', $slug)
+            ->where('is_published', true)
+            ->firstOrFail();
 
-    $user = Auth::user();
+        $user = Auth::user();
 
-    if (!$user || !$user->isEnrolledInSchool()) {
+        if (! $user || ! $user->isEnrolledInSchool()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Доступ только для учеников школы',
+            ], 403);
+        }
+
+        if ($this->isLessonLocked($lesson, $user->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Этот урок заблокирован',
+            ], 403);
+        }
+
+        $progress = BibleUserLessonProgress::firstOrCreate([
+            'user_id' => $user->id,
+            'lesson_id' => $lesson->id,
+        ]);
+
+        $progress->markContentCompleted();
+
         return response()->json([
-            'success' => false,
-            'message' => 'Доступ только для учеников школы',
-        ], 403);
+            'success' => true,
+            'message' => 'Прогресс обновлён',
+            'status' => $progress->status,
+        ]);
     }
-
-    if ($this->isLessonLocked($lesson, $user->id)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Этот урок заблокирован',
-        ], 403);
-    }
-
-    $progress = BibleUserLessonProgress::firstOrCreate([
-        'user_id' => $user->id,
-        'lesson_id' => $lesson->id,
-    ]);
-
-    $progress->markContentCompleted();
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Прогресс обновлён',
-        'status' => $progress->status,
-    ]);
-}
 
     /**
      * Универсальный метод обновления прогресса

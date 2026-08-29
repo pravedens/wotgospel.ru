@@ -143,6 +143,12 @@ class BibleLessonResource extends Resource
                                             Toggle::make('is_published')
                                                 ->label('Опубликован')
                                                 ->default(false),
+
+                                            Toggle::make('requires_essay')
+                                                ->label('✍️ Требуется эссе')
+                                                ->helperText('Если включено, ученик должен написать эссе по этому уроку')
+                                                ->default(false)
+                                                ->columnSpanFull(),
                                         ]),
                                 ]),
                         ]),

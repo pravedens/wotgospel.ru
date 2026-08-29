@@ -150,10 +150,11 @@ class BibleSchoolController extends Controller
     private function getTeachers()
     {
         // ✅ КЕШИРУЕМ УЧИТЕЛЕЙ НА 1 ЧАС
-        $cacheKey = 'bible_school_teachers_' . app()->getLocale();
+        $cacheKey = 'bible_school_teachers_'.app()->getLocale();
 
         return Cache::remember($cacheKey, 3600, function () {
             Log::info('🔄 Teachers cache MISS');
+
             return User::role('teacher')
                 ->select(['id', 'name', 'last_name', 'avatar', 'about'])
                 ->get()
@@ -171,10 +172,10 @@ class BibleSchoolController extends Controller
         $year = $request->get('year');
 
         // ✅ КЕШИРУЕМ ВЫПУСКНИКОВ
-        $cacheKey = 'bible_school_graduates_' . ($year ?? 'all') . '_' . app()->getLocale();
+        $cacheKey = 'bible_school_graduates_'.($year ?? 'all').'_'.app()->getLocale();
 
         $data = Cache::remember($cacheKey, 3600, function () use ($year) {
-            Log::info('🔄 Graduates cache MISS for year: ' . ($year ?? 'all'));
+            Log::info('🔄 Graduates cache MISS for year: '.($year ?? 'all'));
 
             $query = User::role('student')
                 ->whereNotNull('graduation_year')
@@ -209,5 +210,3 @@ class BibleSchoolController extends Controller
         return response()->json($data);
     }
 }
-
-

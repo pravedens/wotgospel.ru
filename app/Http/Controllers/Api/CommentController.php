@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CommentLike;
 use App\Models\Post;
 use App\Models\PostComment;
-use App\Models\CommentLike;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -26,7 +26,7 @@ class CommentController extends Controller
 
         return response()->json([
             'success' => true,
-            'comments' => $comments
+            'comments' => $comments,
         ]);
     }
 
@@ -37,10 +37,10 @@ class CommentController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только зарегистрированные пользователи могут оставлять комментарии'
+                'message' => 'Только зарегистрированные пользователи могут оставлять комментарии',
             ], 401);
         }
 
@@ -53,7 +53,7 @@ class CommentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка валидации',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -68,7 +68,7 @@ class CommentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Комментарий добавлен',
-            'comment' => $comment->load('user')
+            'comment' => $comment->load('user'),
         ]);
     }
 
@@ -81,10 +81,10 @@ class CommentController extends Controller
         $comment = PostComment::findOrFail($commentId);
 
         // Проверка прав: автор комментария или админ
-        if ($user->id !== $comment->user_id && !$user->isAdmin()) {
+        if ($user->id !== $comment->user_id && ! $user->isAdmin()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Нет прав для удаления комментария'
+                'message' => 'Нет прав для удаления комментария',
             ], 403);
         }
 
@@ -94,7 +94,7 @@ class CommentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Комментарий удалён'
+            'message' => 'Комментарий удалён',
         ]);
     }
 
@@ -105,10 +105,10 @@ class CommentController extends Controller
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Только зарегистрированные пользователи могут оценивать комментарии'
+                'message' => 'Только зарегистрированные пользователи могут оценивать комментарии',
             ], 401);
         }
 
@@ -133,7 +133,7 @@ class CommentController extends Controller
         return response()->json([
             'success' => true,
             'liked' => $liked,
-            'likes_count' => $comment->fresh()->likes_count
+            'likes_count' => $comment->fresh()->likes_count,
         ]);
     }
 }

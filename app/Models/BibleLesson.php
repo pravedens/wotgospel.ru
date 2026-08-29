@@ -19,7 +19,7 @@ class BibleLesson extends Model
         'title',
         'slug',
         'call_question',
-        'call_answer',              // ✅ ДОБАВЛЕНО: ответ на призыв
+        'call_answer',
         'scripture_verses',
         'content',
         'practice_task',
@@ -27,12 +27,14 @@ class BibleLesson extends Model
         'is_published',
         'scripture_verse_ids',
         'theme_id',
+        'requires_essay',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'order' => 'integer',
         'scripture_verse_ids' => 'array',
+        'requires_essay' => 'boolean',
     ];
 
     protected static function booted()
