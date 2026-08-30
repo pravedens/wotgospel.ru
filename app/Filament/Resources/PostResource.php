@@ -11,8 +11,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;  // ✅ ДОБАВИТЬ
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -56,8 +56,44 @@ class PostResource extends Resource
             Select::make('category_id')->label('Спикер')->relationship('category', 'title')->required(),
             Select::make('conference_id')->label('Мероприятие')->relationship('conference', 'title')->required(),
             Select::make('group_id')->label('Год')->relationship('group', 'title')->required(),
-            Textarea::make('description')->label('Кратко')->rows(3),
-            Textarea::make('content')->label('Основное')->rows(3),
+            RichEditor::make('description')
+                ->label('Кратко')
+                ->toolbarButtons([
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strike',
+                    'link',
+                    'blockquote',
+                    'bulletList',
+                    'orderedList',
+                ])
+                ->extraAttributes([
+                    'style' => 'min-height: 400px;',
+                ])
+                ->columnSpanFull(),
+
+            // ✅ RichEditor для контента с картинками
+            RichEditor::make('content')
+                ->label('Основной контент')
+                ->toolbarButtons([
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strike',
+                    'link',
+                    'attachFiles',  // ← позволяет загружать картинки
+                    'blockquote',
+                    'bulletList',
+                    'orderedList',
+                ])
+                ->fileAttachmentsDisk('s3')           // ← хранить на S3
+                ->fileAttachmentsDirectory('posts/content')  // ← папка для картинок
+                ->fileAttachmentsVisibility('public')
+                ->extraAttributes([
+                    'style' => 'min-height: 400px;',
+                ])
+                ->columnSpanFull(),
 
             // Медиафайлы
             FileUpload::make('thumbnail')->label('Изображение')->image()->directory('posts/thumbnails')->disk('s3'),

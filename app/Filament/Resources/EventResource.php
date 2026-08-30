@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -107,20 +108,42 @@ class EventResource extends Resource
                 ->native(false)
                 ->displayFormat('H:i'),
 
-            Textarea::make('description')
+            RichEditor::make('description')
                 ->label('Кратко')
-                ->required()
-                ->rows(3)
-                ->autosize()
-                ->placeholder('Введите текст...')
+                ->toolbarButtons([
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strike',
+                    'link',
+                    'blockquote',
+                    'bulletList',
+                    'orderedList',
+                ])
+                ->extraAttributes([
+                    'style' => 'min-height: 400px;',
+                ])
                 ->columnSpanFull(),
 
-            Textarea::make('content')
+            RichEditor::make('content')
                 ->label('Подробно')
-                ->required()
-                ->rows(3)
-                ->autosize()
-                ->placeholder('Введите текст...')
+                    ->toolbarButtons([
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strike',
+                    'link',
+                    'attachFiles',  // ← позволяет загружать картинки
+                    'blockquote',
+                    'bulletList',
+                    'orderedList',
+                ])
+                ->fileAttachmentsDisk('s3')           // ← хранить на S3
+                ->fileAttachmentsDirectory('events/content')  // ← папка для картинок
+                ->fileAttachmentsVisibility('public')
+                ->extraAttributes([
+                    'style' => 'min-height: 400px;',
+                ])
                 ->columnSpanFull(),
 
             FileUpload::make('thumbnail')
@@ -157,11 +180,22 @@ class EventResource extends Resource
                 })
                 ->columnSpanFull(),
 
-            Textarea::make('info')
+            RichEditor::make('info')
                 ->label('Доп. информация')
+                ->toolbarButtons([
+                    'bold',
+                    'italic',
+                    'underline',
+                    'strike',
+                    'link',
+                    'blockquote',
+                    'bulletList',
+                    'orderedList',
+                ])
+                ->extraAttributes([
+                    'style' => 'min-height: 400px;',
+                ])
                 ->columnSpanFull()
-                ->rows(3)
-                ->autosize()
                 ->placeholder('Введите текст...'),
 
             Select::make('color')
