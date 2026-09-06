@@ -162,6 +162,7 @@ Route::post('/email/verification-notification', [VerificationController::class, 
 // ============================================
 Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token()]));
 Route::get('/contacts/recipients-public', [ContactsController::class, 'getPublicRecipients']);
+Route::post('/contacts', [ContactsController::class, 'send']);
 Route::get('/events/{event}/attendees-count', [EventController::class, 'getAttendeesCount']);
 
 // ============================================
@@ -170,7 +171,6 @@ Route::get('/events/{event}/attendees-count', [EventController::class, 'getAtten
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/contacts/recipients', [ContactsController::class, 'getRecipients']);
-    Route::post('/contacts', [ContactsController::class, 'send']);
 
     Route::get('/user/notification-settings', [NotificationSettingsController::class, 'getSettings']);
     Route::put('/user/notification-settings', [NotificationSettingsController::class, 'updateSettings']);

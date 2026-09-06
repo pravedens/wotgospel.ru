@@ -160,6 +160,21 @@ class ContactsController extends Controller
                 ], 422);
             }
 
+            // Ограничение по IP
+$ip = $request->ip();
+$recentMessages = ContactMessage::where('ip', $ip)
+    ->where('created_at', '>', now()->subMinutes(10))
+    ->count();
+
+if ($recentMessages >= 3) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Слишком много сообщений. Попробуйте позже.',
+    ], 429);
+}
+
+
+
             // Проверка капчи для неавторизованных
             if (! $isAuthenticated) {
                 $captchaValid = $this->verifyCaptcha($request->captcha_token);
