@@ -127,7 +127,7 @@ class EventResource extends Resource
 
             RichEditor::make('content')
                 ->label('Подробно')
-                    ->toolbarButtons([
+                ->toolbarButtons([
                     'bold',
                     'italic',
                     'underline',

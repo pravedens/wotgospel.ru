@@ -142,12 +142,13 @@ class ContactsController extends Controller
             $rules = [
                 'message' => 'required|string|max:5000',
                 'recipient_role' => 'required|string|in:pastor,minister,pray,super_admin',
+                'captcha_token' => 'required|string',
             ];
 
             if (! $isAuthenticated) {
                 $rules['name'] = 'required|string|max:255';
                 $rules['email'] = 'required|email|max:255';
-                $rules['captcha_token'] = 'required|string';
+                // $rules['captcha_token'] = 'required|string';
             }
 
             $validator = Validator::make($request->all(), $rules);
@@ -161,29 +162,29 @@ class ContactsController extends Controller
             }
 
             // Ограничение по IP
-$ip = $request->ip();
-$recentMessages = ContactMessage::where('ip', $ip)
-    ->where('created_at', '>', now()->subMinutes(10))
-    ->count();
+            $ip = $request->ip();
+            $recentMessages = ContactMessage::where('ip', $ip)
+                ->where('created_at', '>', now()->subMinutes(10))
+                ->count();
 
-if ($recentMessages >= 3) {
-    return response()->json([
-        'success' => false,
-        'message' => 'Слишком много сообщений. Попробуйте позже.',
-    ], 429);
-}
+            if ($recentMessages >= 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Слишком много сообщений. Попробуйте позже.',
+                ], 429);
+            }
 
+            // Проверка капчи для всех пользователей
+            $captchaValid = $this->verifyCaptcha($request->input('captcha_token'));
 
-
-            // Проверка капчи для неавторизованных
-            if (! $isAuthenticated) {
-                $captchaValid = $this->verifyCaptcha($request->captcha_token);
-                if (! $captchaValid) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Проверка капчи не пройдена',
-                    ], 422);
-                }
+            if (! $captchaValid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Проверка капчи не пройдена',
+                    'errors' => [
+                        'captcha_token' => ['Пройдите проверку капчи заново.'],
+                    ],
+                ], 422);
             }
 
             // Защита от дублей
