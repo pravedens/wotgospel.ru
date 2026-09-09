@@ -39,7 +39,7 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'host' => env('MAIL_HOST', 'app.debugmail.io'),
+            'host' => env('MAIL_HOST', 'mail.wotgospel.ru'),
             'port' => env('MAIL_PORT', 25),
             'encryption' => env('MAIL_ENCRYPTION', 'null'),
             'username' => env('MAIL_USERNAME'),
