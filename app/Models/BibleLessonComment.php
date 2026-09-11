@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleLessonComment extends Model
 {
@@ -25,6 +26,8 @@ class BibleLessonComment extends Model
     protected $casts = [
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
+        // ✅ Санитизация HTML
+    'content' => CleanHtmlInput::class,
     ];
 
     public function lesson(): BelongsTo

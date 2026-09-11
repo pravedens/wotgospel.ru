@@ -30,6 +30,11 @@ class BibleLessonVideo extends Model
     // Автоматическое определение платформы и ID видео
     public function setUrlAttribute($value)
     {
+        // ✅ Разрешаем только http/https
+    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+        $value = null;
+    }
+    
         $this->attributes['url'] = $value;
 
         if ($value) {

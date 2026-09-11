@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class Event extends Model
 {
@@ -43,6 +44,10 @@ class Event extends Model
         'show_in_carousel' => 'boolean',
         'members_only' => 'boolean',
         'is_conference' => 'boolean',
+        // ✅ Санитизация HTML при сохранении
+    'description' => CleanHtmlInput::class,
+    'content' => CleanHtmlInput::class,
+    'info' => CleanHtmlInput::class,
     ];
 
     public function conferenceServices()

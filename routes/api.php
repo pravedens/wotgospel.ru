@@ -139,25 +139,6 @@ Route::prefix('bible')->group(function () {
 });
 
 // ============================================
-// АВТОРИЗАЦИЯ
-// ============================================
-Route::post('/login', [AuthController::class, 'login'])->name('api.login');
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
-
-// ============================================
-// EMAIL ВЕРИФИКАЦИЯ
-// ============================================
-Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
-    ->middleware(['signed', 'throttle:6,1'])
-    ->name('verification.verify');
-
-Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
-    ->middleware(['auth:sanctum', 'throttle:6,1'])
-    ->name('verification.send');
-
-// ============================================
 // CSRF И ПРОЧЕЕ
 // ============================================
 Route::get('/csrf-token', fn () => response()->json(['csrf_token' => csrf_token()]));
@@ -191,7 +172,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/field-visibilities', [AuthController::class, 'updateFieldVisibilities']);
     Route::get('/user/minister-categories', [AuthController::class, 'getMinisterCategories']);
     Route::put('/user/minister-categories', [AuthController::class, 'updateMinisterCategories']);
-    Route::get('/user/check-token', [AuthController::class, 'checkToken']);
 
     Route::get('/my-messages', [MinisterMessageController::class, 'getMessages']);
     Route::put('/my-messages/{id}/read', [MinisterMessageController::class, 'markAsRead']);
@@ -213,8 +193,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('verified')->group(function () {
-        Route::get('/user', [AuthController::class, 'user']);
-        Route::post('/logout', [AuthController::class, 'logout']);
         Route::put('/user/profile', [AuthController::class, 'updateProfile']);
         Route::post('/user/consent', [AuthController::class, 'updateConsent']);
         Route::get('/user/consent/history', [AuthController::class, 'consentHistory']);

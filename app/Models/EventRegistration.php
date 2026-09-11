@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class EventRegistration extends Model
 {
@@ -27,6 +28,8 @@ class EventRegistration extends Model
         'selected_service_ids' => 'array',
         'processed_at' => 'datetime',
         'amount' => 'decimal:2',
+        // ✅ Санитизация HTML (опционально)
+    'admin_notes' => CleanHtmlInput::class,
     ];
 
     protected $with = ['event.conferenceServices', 'user'];

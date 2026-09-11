@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleEnrollmentRequest extends Model
 {
@@ -38,6 +39,13 @@ class BibleEnrollmentRequest extends Model
     protected $casts = [
         'reviewed_at' => 'datetime',
         'birth_date' => 'date',
+        // ✅ Санитизация HTML (пользовательский ввод)
+    'about' => CleanHtmlInput::class,
+    'bible_courses_experience' => CleanHtmlInput::class,
+    'learning_expectations' => CleanHtmlInput::class,
+    'ministry' => CleanHtmlInput::class,
+    // ✅ Санитизация HTML (заметки админа)
+    'notes' => CleanHtmlInput::class,
     ];
 
     const STATUS_PENDING = 'pending';

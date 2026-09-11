@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\MinisterCategory;
 use App\Models\User;
 use App\Models\UserConsent;
@@ -19,72 +20,60 @@ class AuthController extends Controller
      * Вход пользователя и выдача токена
      */
     public function login(Request $request)
-    {
-        try {
-            Log::info('Login attempt', ['email' => $request->email]);
+{
+    try {
+        Log::info('Login attempt', ['email' => $request->email]);
 
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
-                'password' => 'required|string',
-                'remember' => 'boolean',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'remember' => 'boolean',
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ошибка валидации',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $user = User::where('email', $request->email)->first();
-
-            if (! $user || ! Hash::check($request->password, $user->password)) {
-                Log::warning('Invalid login attempt', ['email' => $request->email]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Неверные email или пароль',
-                ], 401);
-            }
-
-            if (! $request->remember) {
-                $user->tokens()->delete();
-            }
-
-            $tokenExpiresAt = $request->remember ? now()->addDays(30) : null;
-            $token = $user->createToken('auth_token', ['*'], $tokenExpiresAt)->plainTextToken;
-
-            if ($request->remember) {
-                $user->tokens()
-                    ->where('name', 'auth_token')
-                    ->latest()
-                    ->first()
-                    ->update(['expires_at' => now()->addDays(30)]);
-            }
-
-            // ✅ Очищаем кеш пользователя при входе
-            $this->clearUserCache($user->id);
-
+        if ($validator->fails()) {
             return response()->json([
-                'success' => true,
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'remember' => $request->remember,
-                'user' => $this->formatUserResponse($user),
-                'roles' => $user->roles->pluck('name')->toArray(),
-                'can_access_admin' => $user->canAccessAdmin(),
-            ]);
+                'success' => false,
+                'message' => 'Ошибка валидации',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
-        } catch (\Exception $e) {
-            Log::error('Login error: '.$e->getMessage());
+        // ✅ Используем Auth::attempt для установки сессии
+        $credentials = $request->only('email', 'password');
+
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            Log::warning('Invalid login attempt', ['email' => $request->email]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка при входе в систему',
-            ], 500);
+                'message' => 'Неверные email или пароль',
+            ], 401);
         }
+
+        // ✅ Регенерируем сессию (защита от session fixation)
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        // ✅ Очищаем кеш пользователя при входе
+        $this->clearUserCache($user->id);
+
+        return response()->json([
+            'success' => true,
+            'user' => $this->formatUserResponse($user),
+            'roles' => $user->roles->pluck('name')->toArray(),
+            'can_access_admin' => $user->canAccessAdmin(),
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Login error: '.$e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка при входе в систему',
+        ], 500);
     }
+}
 
     /**
      * Регистрация нового пользователя
@@ -165,43 +154,40 @@ class AuthController extends Controller
     }
 
     /**
-     * Получение данных текущего пользователя
-     */
-    public function user(Request $request)
-    {
-        try {
-            $user = $request->user();
+ * Получение данных текущего пользователя
+ */
+public function user(Request $request)
+{
+    try {
+        $user = $request->user();
 
-            if (! $user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
-
-            // ✅ Кешируем данные, а не Response объект
-            $cacheKey = 'user_data_'.$user->id;
-
-            $cachedData = Cache::remember($cacheKey, 300, function () use ($user) {
-                return [
-                    'success' => true,
-                    'user' => $this->formatUserResponse($user),
-                    'roles' => $user->roles->pluck('name')->toArray(),
-                    'can_access_admin' => $user->canAccessAdmin(),
-                ];
-            });
-
-            return response()->json($cachedData);
-
-        } catch (\Exception $e) {
-            Log::error('Get user error: '.$e->getMessage());
-
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка загрузки пользователя',
-            ], 500);
+                'message' => 'Unauthenticated',
+            ], 401);
         }
+
+        $cacheKey = 'user_data_'.$user->id;
+
+        $userData = Cache::remember($cacheKey, 300, function () use ($user) {
+            $data = $this->formatUserResponse($user);
+            $data['roles'] = $user->roles->pluck('name')->toArray();
+            $data['can_access_admin'] = $user->canAccessAdmin();
+            return $data;
+        });
+
+        return response()->json($userData);
+
+    } catch (\Exception $e) {
+        Log::error('Get user error: '.$e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка загрузки пользователя',
+        ], 500);
     }
+}
 
     /**
      * Обновление профиля пользователя
@@ -321,33 +307,33 @@ class AuthController extends Controller
      * Выход пользователя
      */
     public function logout(Request $request)
-    {
-        try {
-            $user = $request->user();
+{
+    try {
+        $user = $request->user();
 
-            if ($user) {
-                // ✅ Очищаем кеш пользователя при выходе
-                $this->clearUserCache($user->id);
-
-                if (method_exists($user, 'currentAccessToken')) {
-                    $user->currentAccessToken()->delete();
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Выход выполнен успешно',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Logout error: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Ошибка при выходе',
-            ], 500);
+        if ($user) {
+            $this->clearUserCache($user->id);
         }
+
+        // ✅ Выход из сессии
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Выход выполнен успешно',
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Logout error: '.$e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Ошибка при выходе',
+        ], 500);
     }
+}
 
     /**
      * Обновление согласия на обработку персональных данных
@@ -455,81 +441,6 @@ class AuthController extends Controller
                 'consents' => [],
             ], 500);
         }
-    }
-
-    /**
-     * Проверка валидности токена (для фронтенда)
-     */
-    public function checkToken(Request $request)
-    {
-        $start = microtime(true);
-
-        // Замер 1: Получение пользователя
-        $user = $request->user();
-        $afterUser = microtime(true);
-        $userTime = round(($afterUser - $start) * 1000, 2);
-        \Log::info('⏱️ 1. User load time: '.$userTime.'ms');
-
-        if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token invalid',
-            ], 401);
-        }
-
-        // Замер 2: Проверка токена
-        $token = $user->currentAccessToken();
-        $afterToken = microtime(true);
-        $tokenTime = round(($afterToken - $afterUser) * 1000, 2);
-        \Log::info('⏱️ 2. Token check time: '.$tokenTime.'ms');
-
-        if ($token && $token->expires_at && $token->expires_at->isPast()) {
-            $token->delete();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Token expired',
-            ], 401);
-        }
-
-        // Замер 3: Кеш
-        $cacheKey = 'user_check_'.$user->id;
-        $cachedData = Cache::get($cacheKey);
-        $afterCache = microtime(true);
-        $cacheTime = round(($afterCache - $afterToken) * 1000, 2);
-        \Log::info('⏱️ 3. Cache get time: '.$cacheTime.'ms');
-
-        if ($cachedData) {
-            $totalTime = round((microtime(true) - $start) * 1000, 2);
-            \Log::info('⏱️ ✅ TOTAL checkToken time (CACHE HIT): '.$totalTime.'ms');
-
-            return response()->json($cachedData);
-        }
-
-        \Log::info('❌ Cache MISS for user: '.$user->id);
-
-        // Данные для кеша
-        $data = [
-            'success' => true,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar' => $user->avatar,
-            ],
-            'roles' => $user->roles->pluck('name')->toArray(),
-        ];
-
-        // Замер 4: Сохранение в кеш
-        Cache::put($cacheKey, $data, 300);
-        $afterPut = microtime(true);
-        $putTime = round(($afterPut - $afterCache) * 1000, 2);
-        \Log::info('⏱️ 4. Cache put time: '.$putTime.'ms');
-
-        $totalTime = round((microtime(true) - $start) * 1000, 2);
-        \Log::info('⏱️ ✅ TOTAL checkToken time (CACHE MISS): '.$totalTime.'ms');
-
-        return response()->json($data);
     }
 
     // ============ СОЦСЕТИ ============

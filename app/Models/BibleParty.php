@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleParty extends Model
 {
@@ -31,6 +32,8 @@ class BibleParty extends Model
         'meeting_time' => 'datetime',
         'max_students' => 'integer',
         'is_active' => 'boolean',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()
@@ -95,4 +98,13 @@ class BibleParty extends Model
         $this->join_code = Str::upper(Str::random(6));
         $this->save();
     }
+
+    public function setZoomLinkAttribute($value)
+{
+    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+        $value = null;
+    }
+
+    $this->attributes['zoom_link'] = $value;
+}
 }

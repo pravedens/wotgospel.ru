@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleTheme extends Model
 {
@@ -24,6 +25,8 @@ class BibleTheme extends Model
     protected $casts = [
         'is_published' => 'boolean',
         'order' => 'integer',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

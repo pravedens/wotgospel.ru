@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class Post extends Model
 {
@@ -32,6 +33,9 @@ class Post extends Model
         'created_at' => 'datetime',
         'audio_size' => 'integer',
         'text_size' => 'integer',
+        // ✅ Санитизация при сохранении
+    'content' => CleanHtmlInput::class,
+    'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

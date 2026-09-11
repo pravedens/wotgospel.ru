@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class Bible extends Model
 {
@@ -13,6 +14,8 @@ class Bible extends Model
 
     protected $casts = [
         'date' => 'date',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     // Получить стих дня по дате

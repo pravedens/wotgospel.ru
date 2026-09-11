@@ -15,6 +15,7 @@ use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
@@ -99,6 +100,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'notify_enrollment_rejected_webpush' => 'boolean', // ✅ Добавлен тип
             'notify_certificate_issued_email' => 'boolean',   // ✅ Добавлен тип
             'notify_certificate_issued_webpush' => 'boolean', // ✅ Добавлен тип
+            // ✅ Санитизация HTML (поля анкеты)
+        'about' => CleanHtmlInput::class,
+        'ministry' => CleanHtmlInput::class,
+        'bible_courses_experience' => CleanHtmlInput::class,
+        'learning_expectations' => CleanHtmlInput::class,
         ];
     }
 

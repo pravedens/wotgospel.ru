@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class MinisterCategory extends Model
 {
@@ -13,6 +14,8 @@ class MinisterCategory extends Model
 
     protected $casts = [
         'sort_order' => 'integer',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     public function users(): BelongsToMany

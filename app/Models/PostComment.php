@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class PostComment extends Model
 {
@@ -17,6 +18,8 @@ class PostComment extends Model
     protected $casts = [
         'is_approved' => 'boolean',
         'likes_count' => 'integer',
+        // ✅ Санитизация HTML
+    'content' => CleanHtmlInput::class,
     ];
 
     public function post(): BelongsTo

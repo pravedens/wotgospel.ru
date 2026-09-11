@@ -17,4 +17,12 @@ class SocialLink extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function setUrlAttribute($value)
+{
+    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+        $value = null;
+    }
+    $this->attributes['url'] = $value;
+}
 }

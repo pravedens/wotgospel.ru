@@ -97,12 +97,12 @@ class Conversation extends Model
     }
 
     public function getUnreadCount(int $userId): int
-    {
-        return $this->messages()
-            ->where('receiver_id', $userId)
-            ->where('is_read', false)
-            ->count();
-    }
+{
+    return Message::where('conversation_id', $this->id)
+        ->where('receiver_id', $userId)
+        ->where('is_read', false)
+        ->count();
+}
 
     // Scope
     public function scopeBetweenUsers($query, int $user1Id, int $user2Id)

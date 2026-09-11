@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class Friend extends Model
 {
@@ -25,6 +26,8 @@ class Friend extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()
@@ -62,4 +65,12 @@ class Friend extends Model
 
         return asset('storage/'.$this->thumbnail);
     }
+
+    public function setLinkAttribute($value)
+{
+    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+        $value = null;
+    }
+    $this->attributes['link'] = $value;
+}
 }

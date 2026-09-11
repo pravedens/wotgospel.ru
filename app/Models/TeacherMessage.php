@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class TeacherMessage extends Model
 {
@@ -24,6 +25,8 @@ class TeacherMessage extends Model
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
+        // ✅ Санитизация HTML
+    'message' => CleanHtmlInput::class,
     ];
 
     /**

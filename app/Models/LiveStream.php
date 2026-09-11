@@ -111,4 +111,12 @@ class LiveStream extends Model
                     ->orWhere('scheduled_end', '>=', now());
             });
     }
+
+    public function setEmbedUrlAttribute($value)
+{
+    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+        $value = null;
+    }
+    $this->attributes['embed_url'] = $value;
+}
 }

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class ConferenceService extends Model
 {
@@ -28,6 +29,8 @@ class ConferenceService extends Model
         'end_time' => 'string',
         'capacity' => 'integer',
         'order' => 'integer',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
     ];
 
     public function event(): BelongsTo

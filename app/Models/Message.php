@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class Message extends Model
 {
@@ -38,6 +39,9 @@ class Message extends Model
         'read_at' => 'datetime',
         'delivered_at' => 'datetime',
         'approved_at' => 'datetime',
+        // ✅ Санитизация HTML
+    'message' => CleanHtmlInput::class,
+    'original_message' => CleanHtmlInput::class,
     ];
 
     public function conversation(): BelongsTo

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class About extends Model
 {
@@ -14,6 +15,10 @@ class About extends Model
     protected $guarded = [];
 
     protected $table = 'abouts';
+
+    protected $casts = [
+    'content' => CleanHtmlInput::class,
+];
 
     public function denomination(): BelongsTo
     {

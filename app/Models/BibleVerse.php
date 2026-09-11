@@ -5,6 +5,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleVerse extends Model
 {
@@ -21,6 +22,8 @@ class BibleVerse extends Model
     protected $casts = [
         'chapter' => 'integer',
         'verse' => 'integer',
+        // ✅ Санитизация HTML
+    'text' => CleanHtmlInput::class,
     ];
 
     public static function findByReference(string $reference): ?self

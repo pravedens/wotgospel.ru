@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleLesson extends Model
 {
@@ -35,6 +36,11 @@ class BibleLesson extends Model
         'order' => 'integer',
         'scripture_verse_ids' => 'array',
         'requires_essay' => 'boolean',
+        // ✅ Санитизация HTML
+    'content' => CleanHtmlInput::class,
+    'call_question' => CleanHtmlInput::class,
+    'call_answer' => CleanHtmlInput::class,
+    'practice_task' => CleanHtmlInput::class,
     ];
 
     protected static function booted()
@@ -135,21 +141,22 @@ class BibleLesson extends Model
      * Форматированный текст стихов для отображения на фронтенде
      */
     public function getFormattedScriptureVersesAttribute(): string
-    {
-        if (empty($this->scripture_verses)) {
-            return '<p class="text-white/50">📖 Стихи для этого урока пока не добавлены</p>';
-        }
-
-        $verses = explode("\n\n", trim($this->scripture_verses));
-        $html = '';
-        foreach ($verses as $verse) {
-            if (trim($verse)) {
-                $html .= "<p class=\"mb-3 pb-2 border-b border-white/10\">📖 {$verse}</p>";
-            }
-        }
-
-        return $html;
+{
+    if (empty($this->scripture_verses)) {
+        return '<p class="text-white/50">📖 Стихи для этого урока пока не добавлены</p>';
     }
+
+    $verses = explode("\n\n", trim($this->scripture_verses));
+    $html = '';
+    foreach ($verses as $verse) {
+        if (trim($verse)) {
+            $escaped = htmlspecialchars($verse, ENT_QUOTES, 'UTF-8');
+            $html .= "<p class=\"mb-3 pb-2 border-b border-white/10\">📖 {$escaped}</p>";
+        }
+    }
+
+    return $html;
+}
 
     /**
      * Мутатор для scripture_verse_ids (массив ID стихов)

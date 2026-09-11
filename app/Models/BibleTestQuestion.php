@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleTestQuestion extends Model
 {
@@ -23,9 +24,11 @@ class BibleTestQuestion extends Model
     ];
 
     protected $casts = [
-        'config' => 'array',
+            'config' => 'array',
         'points' => 'integer',
         'order' => 'integer',
+        // ✅ Санитизация HTML
+    'question' => CleanHtmlInput::class,
     ];
 
     public function lesson(): BelongsTo
@@ -194,14 +197,8 @@ class BibleTestQuestion extends Model
 
     protected function validateVerseReference($answer): array
     {
-        \Log::info('=== validateVerseReference ===', [
-            'answer' => $answer,
-            'config' => $this->config,
-        ]);
 
         $parsed = $this->parseVerseReference((string) $answer);
-
-        \Log::info('Parsed result:', $parsed ?? ['null']);
 
         if (! $parsed) {
             return [
@@ -215,22 +212,12 @@ class BibleTestQuestion extends Model
         $expectedChapter = $this->config['expected_chapter'] ?? null;
         $expectedVerse = $this->config['expected_verse'] ?? null;
 
-        \Log::info('Expected:', [
-            'book' => $expectedBook,
-            'chapter' => $expectedChapter,
-            'verse' => $expectedVerse,
-        ]);
 
         $acceptAlternativeNotations = (bool) ($this->config['accept_alternative_notations'] ?? true);
 
         if ($acceptAlternativeNotations) {
             $normalizedParsedBook = $this->normalizeBibleBookName($parsed['book']);
             $normalizedExpectedBook = $this->normalizeBibleBookName($expectedBook);
-
-            \Log::info('Normalized books:', [
-                'parsed' => $normalizedParsedBook,
-                'expected' => $normalizedExpectedBook,
-            ]);
 
             $bookMatch = $normalizedParsedBook === $normalizedExpectedBook;
         } else {
@@ -239,12 +226,6 @@ class BibleTestQuestion extends Model
 
         $chapterMatch = (int) $parsed['chapter'] === (int) $expectedChapter;
         $verseMatch = (int) $parsed['verse'] === (int) $expectedVerse;
-
-        \Log::info('Matches:', [
-            'bookMatch' => $bookMatch,
-            'chapterMatch' => $chapterMatch,
-            'verseMatch' => $verseMatch,
-        ]);
 
         $correct = $bookMatch && $chapterMatch && $verseMatch;
 
@@ -257,7 +238,6 @@ class BibleTestQuestion extends Model
 
     protected function parseVerseReference(string $reference): ?array
     {
-        \Log::info('Parsing reference:', ['original' => $reference]);
 
         $reference = trim($reference);
         $reference = preg_replace('/\s+/u', ' ', $reference);
@@ -266,7 +246,6 @@ class BibleTestQuestion extends Model
         $pattern = '/^([\pL\s\.0-9]+?)\s*(\d+):(\d+)$/u';
 
         if (preg_match($pattern, $reference, $matches)) {
-            \Log::info('Pattern matched:', $matches);
 
             return [
                 'book' => trim($matches[1]),
@@ -278,7 +257,6 @@ class BibleTestQuestion extends Model
         // Альтернативный паттерн для форматов без пробела: 1Ин. 3:16
         $pattern2 = '/^([\pL\.0-9]+?)(\d+):(\d+)$/u';
         if (preg_match($pattern2, $reference, $matches)) {
-            \Log::info('Pattern2 matched:', $matches);
 
             return [
                 'book' => trim($matches[1]),
@@ -298,8 +276,6 @@ class BibleTestQuestion extends Model
         $book = mb_strtolower(trim($book));
         $book = str_replace('.', '', $book);
         $book = preg_replace('/\s+/u', ' ', $book);
-
-        \Log::info('Normalizing book:', ['original' => $original, 'after' => $book]);
 
         $aliases = [
             'ин' => 'иоанна',
@@ -335,7 +311,6 @@ class BibleTestQuestion extends Model
         ];
 
         $result = $aliases[$book] ?? $book;
-        \Log::info('Normalized result:', ['result' => $result]);
 
         return $result;
     }

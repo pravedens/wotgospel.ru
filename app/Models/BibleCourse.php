@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleCourse extends Model
 {
@@ -30,6 +31,11 @@ class BibleCourse extends Model
         'is_published' => 'boolean',
         'order' => 'integer',
         'statuses' => 'array',
+        // ✅ Санитизация HTML
+    'description' => CleanHtmlInput::class,
+    'what_you_will_learn' => CleanHtmlInput::class,
+    'skills' => CleanHtmlInput::class,
+    'certificate_text' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

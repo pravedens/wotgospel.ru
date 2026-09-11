@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Mews\Purifier\Casts\CleanHtmlInput;
 
 class BibleEssay extends Model
 {
@@ -28,6 +29,9 @@ class BibleEssay extends Model
     protected $casts = [
         'reviewed_at' => 'datetime',
         'score' => 'integer',
+        // ✅ Санитизация HTML
+    'content' => CleanHtmlInput::class,
+    'teacher_feedback' => CleanHtmlInput::class,
     ];
 
     const STATUS_PENDING = 'pending';
@@ -75,7 +79,7 @@ class BibleEssay extends Model
 
         // ✅ Отправляем уведомление ученику
         $notificationService = app(NotificationService::class);
-        $notificationService->sendEssayReviewedNotification($this->user, $this->lesson, $score, $feedback, 'approved');
+        $notificationService->sendEssayReviewedNotification($this->user, $this->lesson, $score, $this->teacher_feedback, 'approved');
     }
 
     public function reject(string $feedback, int $reviewerId): void
