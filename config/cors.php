@@ -16,7 +16,7 @@ return [
     */
 
     'paths' => [
-        'api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'user', 'email/*', 'forgot-password', 'reset-password'
+        'api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'user', 'email/*', 'forgot-password', 'reset-password', 'email/*',
     ], // Все auth-пути, которые в web.php, должны быть в paths
 
     'allowed_methods' => ['*'],
@@ -24,8 +24,6 @@ return [
     'allowed_origins' => [
         'https://wotnt.ru',
         'https://www.wotnt.ru',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
     ],
 
     'allowed_origins_patterns' => [],

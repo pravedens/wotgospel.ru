@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+<x-filament::page>
     <div class="space-y-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
             <h2 class="text-2xl font-bold mb-2">
@@ -18,4 +18,4 @@
             </a>
         </div>
     </div>
-</x-filament-panels::page>
+</x-filament::page>
