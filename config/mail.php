@@ -50,9 +50,9 @@ return [
             // Добавляем этот блок для обхода проблем с SSL
             'stream' => [
                 'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true,
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                    'allow_self_signed' => false,
                     'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT,
                 ],
             ],
