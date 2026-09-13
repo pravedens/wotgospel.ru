@@ -23,12 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withProviders([
-        EventServiceProvider::class,
+        EventServiceProvider::class, // ← ДОБАВИТЬ ЭТУ СТРОКУ
     ])
     ->withMiddleware(function (Middleware $middleware): void {
-        // ✅ ВКЛЮЧАЕМ SPA-режим Sanctum (cookie-based auth)
-        $middleware->statefulApi();
-
         $middleware->alias([
             'verified' => EnsureEmailIsVerified::class,
             'admin.access' => CheckAdminAccess::class,
@@ -42,25 +39,17 @@ return Application::configure(basePath: dirname(__DIR__))
             SubstituteBindings::class,
         ]);
 
-        // ⚠️ УБЕРИТЕ 'api/*' из исключений CSRF — для cookie-based auth это небезопасно!
-        // CSRF-защита должна работать для stateful-запросов.
         $middleware->validateCsrfTokens(except: [
-            // 'api/*',  ← закомментировать
+            'api/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if (
-        $request->expectsJson()
-        || $request->is('api/*')
-        || $request->is('user')
-        || $request->is('login')
-        || $request->is('logout')
-    ) {
-        return response()->json([
-            'message' => 'Unauthenticated.',
-        ], 401);
-    }
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Unauthenticated. Please provide a valid Sanctum token.',
+                ], 401);
+            }
 
             return redirect()->guest('/admin/login');
         });

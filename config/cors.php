@@ -16,8 +16,11 @@ return [
     */
 
     'paths' => [
-        'api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'user', 'email/*', 'forgot-password', 'reset-password'
-    ], // Все auth-пути, которые в web.php, должны быть в paths
+        'api/*',
+        'sanctum/csrf-cookie',
+        'login',
+        'logout',
+    ],
 
     'allowed_methods' => ['*'],
 
@@ -34,7 +37,7 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
     'supports_credentials' => true, // Для токенов не нужны куки
 
