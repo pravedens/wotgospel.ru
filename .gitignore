@@ -25,3 +25,7 @@ Homestead.yaml
 Thumbs.db
 _ide_helper.php
 _ide_helper_models.php
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
+
+/bootstrap/cache/*.tmp
