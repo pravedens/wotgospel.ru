@@ -1,4 +1,11 @@
 <?php return array (
+  'andreapollastri/checkpoint' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Checkpoint\\CheckpointServiceProvider',
+    ),
+  ),
   'barryvdh/laravel-dompdf' => 
   array (
     'aliases' => 
@@ -9,6 +16,13 @@
     'providers' => 
     array (
       0 => 'Barryvdh\\DomPDF\\ServiceProvider',
+    ),
+  ),
+  'barryvdh/laravel-ide-helper' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Barryvdh\\LaravelIdeHelper\\IdeHelperServiceProvider',
     ),
   ),
   'bezhansalleh/filament-plugin-essentials' => 

@@ -1,5 +1,3 @@
-// app/Notifications/NewPrivateMessageNotification.php
-
 <?php
 
 namespace App\Notifications;

@@ -1,5 +1,3 @@
-// app/Notifications/CertificateIssuedNotification.php
-
 <?php
 
 namespace App\Notifications;

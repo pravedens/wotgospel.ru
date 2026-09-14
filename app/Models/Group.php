@@ -9,7 +9,10 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title',
+        'slug'
+    ];
 
     public function posts()
     {

@@ -10,7 +10,13 @@ class Bible extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'title',
+        'slug',
+        'description',
+        'content',
+        'date'
+    ];
 
     protected $casts = [
         'date' => 'date',
