@@ -25,7 +25,7 @@ class BiblePartyMessage extends Model
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
         // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
+        'message' => CleanHtmlInput::class,
     ];
 
     public function party(): BelongsTo

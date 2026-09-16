@@ -18,8 +18,8 @@ class Category extends Model
     ];
 
     protected $casts = [
-    'description' => CleanHtmlInput::class,
-];
+        'description' => CleanHtmlInput::class,
+    ];
 
     public function posts()
     {

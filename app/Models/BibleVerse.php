@@ -23,7 +23,7 @@ class BibleVerse extends Model
         'chapter' => 'integer',
         'verse' => 'integer',
         // ✅ Санитизация HTML
-    'text' => CleanHtmlInput::class,
+        'text' => CleanHtmlInput::class,
     ];
 
     public static function findByReference(string $reference): ?self

@@ -12,7 +12,7 @@ class Denomination extends Model
 
     protected $fillable = [
         'title',
-        'slug'
+        'slug',
     ];
 
     public function about(): HasMany

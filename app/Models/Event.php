@@ -45,9 +45,9 @@ class Event extends Model
         'members_only' => 'boolean',
         'is_conference' => 'boolean',
         // ✅ Санитизация HTML при сохранении
-    'description' => CleanHtmlInput::class,
-    'content' => CleanHtmlInput::class,
-    'info' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
+        'content' => CleanHtmlInput::class,
+        'info' => CleanHtmlInput::class,
     ];
 
     public function conferenceServices()

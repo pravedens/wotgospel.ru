@@ -31,10 +31,10 @@ class BibleLessonVideo extends Model
     public function setUrlAttribute($value)
     {
         // ✅ Разрешаем только http/https
-    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
-        $value = null;
-    }
-    
+        if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+            $value = null;
+        }
+
         $this->attributes['url'] = $value;
 
         if ($value) {

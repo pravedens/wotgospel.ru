@@ -24,11 +24,11 @@ class BibleTestQuestion extends Model
     ];
 
     protected $casts = [
-            'config' => 'array',
+        'config' => 'array',
         'points' => 'integer',
         'order' => 'integer',
         // ✅ Санитизация HTML
-    'question' => CleanHtmlInput::class,
+        'question' => CleanHtmlInput::class,
     ];
 
     public function lesson(): BelongsTo
@@ -211,7 +211,6 @@ class BibleTestQuestion extends Model
         $expectedBook = (string) ($this->config['expected_book'] ?? '');
         $expectedChapter = $this->config['expected_chapter'] ?? null;
         $expectedVerse = $this->config['expected_verse'] ?? null;
-
 
         $acceptAlternativeNotations = (bool) ($this->config['accept_alternative_notations'] ?? true);
 

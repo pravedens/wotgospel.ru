@@ -13,29 +13,29 @@ class Post extends Model
     use HasFactory;
 
     protected $fillable = [
-    'title',
-    'slug',
-    'description',
-    'content',
-    'category_id',
-    'conference_id',
-    'group_id',
-    'thumbnail',
-    'youtube',
-    'rutube',
-    'dzen',
-    'vkVideo',
-    'audio_file',
-    'audio_filename',
-    'audio_size',
-    'audio_mime',
-    'audio',
-    'text',
-    'text_file',
-    'text_filename',
-    'text_size',
-    'text_mime',
-];
+        'title',
+        'slug',
+        'description',
+        'content',
+        'category_id',
+        'conference_id',
+        'group_id',
+        'thumbnail',
+        'youtube',
+        'rutube',
+        'dzen',
+        'vkVideo',
+        'audio_file',
+        'audio_filename',
+        'audio_size',
+        'audio_mime',
+        'audio',
+        'text',
+        'text_file',
+        'text_filename',
+        'text_size',
+        'text_mime',
+    ];
 
     protected $table = 'posts';
 
@@ -57,8 +57,8 @@ class Post extends Model
         'audio_size' => 'integer',
         'text_size' => 'integer',
         // ✅ Санитизация при сохранении
-    'content' => CleanHtmlInput::class,
-    'description' => CleanHtmlInput::class,
+        'content' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

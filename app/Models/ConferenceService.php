@@ -30,7 +30,7 @@ class ConferenceService extends Model
         'capacity' => 'integer',
         'order' => 'integer',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     public function event(): BelongsTo

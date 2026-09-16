@@ -32,10 +32,10 @@ class BibleCourse extends Model
         'order' => 'integer',
         'statuses' => 'array',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
-    'what_you_will_learn' => CleanHtmlInput::class,
-    'skills' => CleanHtmlInput::class,
-    'certificate_text' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
+        'what_you_will_learn' => CleanHtmlInput::class,
+        'skills' => CleanHtmlInput::class,
+        'certificate_text' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

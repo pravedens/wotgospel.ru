@@ -40,8 +40,8 @@ class Message extends Model
         'delivered_at' => 'datetime',
         'approved_at' => 'datetime',
         // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
-    'original_message' => CleanHtmlInput::class,
+        'message' => CleanHtmlInput::class,
+        'original_message' => CleanHtmlInput::class,
     ];
 
     public function conversation(): BelongsTo

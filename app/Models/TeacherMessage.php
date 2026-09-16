@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Mews\Purifier\Casts\CleanHtmlInput;
 
 class TeacherMessage extends Model
 {
@@ -25,29 +24,27 @@ class TeacherMessage extends Model
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
-        // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
     ];
 
     /**
-     * Связь с учителем (получателем)
+     * ✅ Убираем HTML-теги при сохранении.
+     * Сообщения учителям — plain text, HTML не нужен.
      */
+    public function setMessageAttribute($value)
+    {
+        $this->attributes['message'] = trim(strip_tags($value));
+    }
+
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    /**
-     * Связь с отправителем (если авторизован)
-     */
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /**
-     * Отметить сообщение как прочитанное
-     */
     public function markAsRead(): void
     {
         if (! $this->is_read) {
@@ -58,9 +55,6 @@ class TeacherMessage extends Model
         }
     }
 
-    /**
-     * Отметить как непрочитанное
-     */
     public function markAsUnread(): void
     {
         if ($this->is_read) {
@@ -71,25 +65,16 @@ class TeacherMessage extends Model
         }
     }
 
-    /**
-     * Scope для непрочитанных сообщений
-     */
     public function scopeUnread($query)
     {
         return $query->where('is_read', false);
     }
 
-    /**
-     * Scope для прочитанных сообщений
-     */
     public function scopeRead($query)
     {
         return $query->where('is_read', true);
     }
 
-    /**
-     * Scope для сообщений конкретному учителю
-     */
     public function scopeForTeacher($query, int $teacherId)
     {
         return $query->where('teacher_id', $teacherId);

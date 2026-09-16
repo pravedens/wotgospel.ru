@@ -27,7 +27,7 @@ class BibleLessonComment extends Model
         'is_approved' => 'boolean',
         'approved_at' => 'datetime',
         // ✅ Санитизация HTML
-    'content' => CleanHtmlInput::class,
+        'content' => CleanHtmlInput::class,
     ];
 
     public function lesson(): BelongsTo

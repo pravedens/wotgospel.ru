@@ -31,7 +31,7 @@ class MinisterMessageNotification extends Notification
             ->line('Вам пришло новое сообщение от прихожанина.')
             ->line('**От:** '.$this->message->sender_name.' ('.$this->message->sender_email.')')
             ->line('**Сообщение:**')
-            ->line($this->message->message)
+            ->line(trim(strip_tags($this->message->message)))  // ✅ strip_tags
             ->action('Ответить', 'mailto:'.$this->message->sender_email)
             ->line('Вы можете прочитать и ответить на сообщение в личном кабинете.')
             ->salutation('С уважением, '.config('app.name'));

@@ -113,10 +113,10 @@ class LiveStream extends Model
     }
 
     public function setEmbedUrlAttribute($value)
-{
-    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
-        $value = null;
+    {
+        if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+            $value = null;
+        }
+        $this->attributes['embed_url'] = $value;
     }
-    $this->attributes['embed_url'] = $value;
-}
 }

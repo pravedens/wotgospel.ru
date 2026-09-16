@@ -19,7 +19,7 @@ class PostComment extends Model
         'is_approved' => 'boolean',
         'likes_count' => 'integer',
         // ✅ Санитизация HTML
-    'content' => CleanHtmlInput::class,
+        'content' => CleanHtmlInput::class,
     ];
 
     public function post(): BelongsTo

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Mews\Purifier\Casts\CleanHtmlInput;
 
 class ContactMessage extends Model
 {
@@ -38,9 +37,13 @@ class ContactMessage extends Model
         'is_read' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
     ];
+
+        // ✅ Убираем HTML-теги при сохранении (plain text)
+    public function setMessageAttribute($value)
+    {
+        $this->attributes['message'] = trim(strip_tags($value));
+    }
 
     /**
      * Get the user that sent the message.

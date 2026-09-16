@@ -15,7 +15,7 @@ class MinisterCategory extends Model
     protected $casts = [
         'sort_order' => 'integer',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     public function users(): BelongsToMany

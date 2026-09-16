@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Mews\Purifier\Casts\CleanHtmlInput;
 
 class MinisterMessage extends Model
 {
@@ -16,9 +15,13 @@ class MinisterMessage extends Model
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
-        // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
     ];
+
+    // ✅ Мутатор: убираем HTML-теги при сохранении
+    public function setMessageAttribute($value)
+    {
+        $this->attributes['message'] = trim(strip_tags($value));
+    }
 
     public function minister(): BelongsTo
     {

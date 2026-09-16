@@ -13,7 +13,7 @@ class PrivateMessage extends Model
         'is_read' => 'boolean',
         'read_at' => 'datetime',
         // ✅ Санитизация HTML
-    'message' => CleanHtmlInput::class,
+        'message' => CleanHtmlInput::class,
     ];
 
     public function sender()

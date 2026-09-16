@@ -30,8 +30,8 @@ class BibleEssay extends Model
         'reviewed_at' => 'datetime',
         'score' => 'integer',
         // ✅ Санитизация HTML
-    'content' => CleanHtmlInput::class,
-    'teacher_feedback' => CleanHtmlInput::class,
+        'content' => CleanHtmlInput::class,
+        'teacher_feedback' => CleanHtmlInput::class,
     ];
 
     const STATUS_PENDING = 'pending';

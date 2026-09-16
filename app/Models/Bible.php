@@ -15,13 +15,13 @@ class Bible extends Model
         'slug',
         'description',
         'content',
-        'date'
+        'date',
     ];
 
     protected $casts = [
         'date' => 'date',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     // Получить стих дня по дате

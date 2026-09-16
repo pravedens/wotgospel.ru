@@ -27,7 +27,7 @@ class Friend extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()
@@ -67,10 +67,10 @@ class Friend extends Model
     }
 
     public function setLinkAttribute($value)
-{
-    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
-        $value = null;
+    {
+        if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+            $value = null;
+        }
+        $this->attributes['link'] = $value;
     }
-    $this->attributes['link'] = $value;
-}
 }

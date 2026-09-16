@@ -29,7 +29,7 @@ class EventRegistration extends Model
         'processed_at' => 'datetime',
         'amount' => 'decimal:2',
         // ✅ Санитизация HTML (опционально)
-    'admin_notes' => CleanHtmlInput::class,
+        'admin_notes' => CleanHtmlInput::class,
     ];
 
     protected $with = ['event.conferenceServices', 'user'];

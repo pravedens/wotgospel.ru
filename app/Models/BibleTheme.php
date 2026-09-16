@@ -26,7 +26,7 @@ class BibleTheme extends Model
         'is_published' => 'boolean',
         'order' => 'integer',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()

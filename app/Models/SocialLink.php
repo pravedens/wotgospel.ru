@@ -19,10 +19,10 @@ class SocialLink extends Model
     }
 
     public function setUrlAttribute($value)
-{
-    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
-        $value = null;
+    {
+        if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+            $value = null;
+        }
+        $this->attributes['url'] = $value;
     }
-    $this->attributes['url'] = $value;
-}
 }

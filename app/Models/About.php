@@ -24,8 +24,8 @@ class About extends Model
     protected $table = 'abouts';
 
     protected $casts = [
-    'content' => CleanHtmlInput::class,
-];
+        'content' => CleanHtmlInput::class,
+    ];
 
     public function denomination(): BelongsTo
     {

@@ -33,7 +33,7 @@ class BibleParty extends Model
         'max_students' => 'integer',
         'is_active' => 'boolean',
         // ✅ Санитизация HTML
-    'description' => CleanHtmlInput::class,
+        'description' => CleanHtmlInput::class,
     ];
 
     protected static function booted()
@@ -100,11 +100,11 @@ class BibleParty extends Model
     }
 
     public function setZoomLinkAttribute($value)
-{
-    if ($value && ! preg_match('/^https?:\/\//i', $value)) {
-        $value = null;
-    }
+    {
+        if ($value && ! preg_match('/^https?:\/\//i', $value)) {
+            $value = null;
+        }
 
-    $this->attributes['zoom_link'] = $value;
-}
+        $this->attributes['zoom_link'] = $value;
+    }
 }

@@ -4,7 +4,6 @@ use App\Http\Controllers\Admin\CertificatePreviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\ResetPasswordController;
-use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Auth\FilamentVerificationController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -64,4 +63,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
-

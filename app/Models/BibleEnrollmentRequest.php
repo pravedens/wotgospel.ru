@@ -40,12 +40,12 @@ class BibleEnrollmentRequest extends Model
         'reviewed_at' => 'datetime',
         'birth_date' => 'date',
         // ✅ Санитизация HTML (пользовательский ввод)
-    'about' => CleanHtmlInput::class,
-    'bible_courses_experience' => CleanHtmlInput::class,
-    'learning_expectations' => CleanHtmlInput::class,
-    'ministry' => CleanHtmlInput::class,
-    // ✅ Санитизация HTML (заметки админа)
-    'notes' => CleanHtmlInput::class,
+        'about' => CleanHtmlInput::class,
+        'bible_courses_experience' => CleanHtmlInput::class,
+        'learning_expectations' => CleanHtmlInput::class,
+        'ministry' => CleanHtmlInput::class,
+        // ✅ Санитизация HTML (заметки админа)
+        'notes' => CleanHtmlInput::class,
     ];
 
     const STATUS_PENDING = 'pending';
