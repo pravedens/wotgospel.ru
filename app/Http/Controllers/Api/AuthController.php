@@ -516,6 +516,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar,
+                'email_verified_at' => $user->email_verified_at,
             ],
             'roles' => $user->roles->pluck('name')->toArray(),
         ];
