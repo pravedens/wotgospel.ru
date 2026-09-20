@@ -39,7 +39,7 @@ class ContactMessage extends Model
         'updated_at' => 'datetime',
     ];
 
-        // ✅ Убираем HTML-теги при сохранении (plain text)
+    // ✅ Убираем HTML-теги при сохранении (plain text)
     public function setMessageAttribute($value)
     {
         $this->attributes['message'] = trim(strip_tags($value));

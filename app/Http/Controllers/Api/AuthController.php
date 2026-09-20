@@ -137,13 +137,7 @@ class AuthController extends Controller
 
             error_log('User created: ID='.$user->id.', Email='.$user->email);
 
-            try {
-                $user->sendEmailVerificationNotification();
-                error_log('SUCCESS: Verification email sent');
-            } catch (\Exception $e) {
-                error_log('ERROR sending email: '.$e->getMessage());
-            }
-
+            // ✅ Только event — Laravel сам отправит письмо через встроенный listener
             event(new Registered($user));
             error_log('Registered event dispatched');
 
