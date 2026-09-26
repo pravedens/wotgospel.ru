@@ -29,3 +29,9 @@ _ide_helper_models.php
 !/bootstrap/cache/.gitignore
 
 /bootstrap/cache/*.tmp
+
+# Security: certificates and keys
+*.pem
+*.key
+*.crt
+storage/logs/*

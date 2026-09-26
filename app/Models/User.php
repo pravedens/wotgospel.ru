@@ -78,7 +78,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'birth_date' => 'date',
+            'birth_date' => 'date:Y-m-d',
             'notify_new_events_email' => 'boolean',
             'notify_event_reminder_email' => 'boolean',
             'notify_event_day_email' => 'boolean',
@@ -102,9 +102,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'notify_certificate_issued_webpush' => 'boolean', // ✅ Добавлен тип
             // ✅ Санитизация HTML (поля анкеты)
             'about' => CleanHtmlInput::class,
-            'ministry' => CleanHtmlInput::class,
-            'bible_courses_experience' => CleanHtmlInput::class,
-            'learning_expectations' => CleanHtmlInput::class,
+            'ministry' => \App\Casts\StripHtml::class,
+            'bible_courses_experience' => \App\Casts\StripHtml::class,
+            'learning_expectations' => \App\Casts\StripHtml::class,
         ];
     }
 

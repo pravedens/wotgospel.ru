@@ -1,0 +1,164 @@
+
+  тФМтФАтФРтФм тФмтФМтФАтФРтФМтФАтФРтФмтФМтФАтФМтФАтФРтФМтФАтФРтФмтФМтФРтФМтФМтФмтФР
+  тФВ  тФЬтФАтФдтФЬтФд тФВ  тФЬтФ┤тФРтФЬтФАтФШтФВ тФВтФВтФВтФВтФВ тФВ 
+  тФФтФАтФШтФ┤ тФ┤тФФтФАтФШтФФтФАтФШтФ┤ тФ┤тФ┤  тФФтФАтФШтФ┤тФШтФФтФШ тФ┤ 
+
+  Laravel Security Scanner тАФ andreapollastri/checkpoint
+  Scanning: G:\newXampp\htdocs\wotgospel.local
+
+
+
+    PASS  Composer CVE Audit
+        No known CVEs in Composer dependencies.
+
+    WARN  NPM CVE Audit
+        No lock file found (package-lock.json / yarn.lock / pnpm-lock.yaml) тАФ skipping NPM audit.
+
+    WARN  Environment Configuration
+        4 environment issue(s) found.
+          тЪС APP_DEBUG is true тАФ full stack traces will be exposed to end users. [3ff08f5321c5]
+          тЪС APP_ENV is "local" тАФ set to "production" in production environments. [788146a4921b]
+          тЪС APP_URL is set to "http://localhost:8000" тАФ update it for production. [cae8474f774f]
+          тЪС SESSION_SECURE_COOKIE is not enabled тАФ session cookies will be sent over plain HTTP. [3804ebbc7280]
+
+    WARN  .gitignore Sensitive Files
+        2 pattern(s) missing from .gitignore.
+          тЪС "*.pem" is not listed in .gitignore. [68035c874bb5]
+          тЪС "storage/logs" is not listed in .gitignore. [ce6f0d228c9a]
+
+    WARN  File Permissions
+        3 file permission issue(s) found.
+          тЪС .env is world-readable (perms: 666) тАФ restrict to 600 or 640. [fc44fc869c16]
+          тЪС .env is world-writable (perms: 666) тАФ restrict immediately. [ea61233e43a4]
+          тЪС storage/ is world-writable (perms: 777) тАФ restrict to 775. [d3fe1df47182]
+
+    FAIL  Hardcoded Secrets
+        4 potential hardcoded secret(s) found.
+          тЬЧ \lang\en\auth.php:17 тАФ 'password' => 'The provided password is incorrect.', [64c97c1a5c8f]
+          тЬЧ \lang\en\passwords.php:19 тАФ 'token' => 'This password reset token is invalid.', [c4469d5235b3]
+          тЬЧ \lang\ru\passwords.php:7 тАФ 'token' => '╨Э╨╡╨┤╨╡╨╣╤Б╤В╨▓╨╕╤В╨╡╨╗╤М╨╜╤Л╨╣ ╤В╨╛╨║╨╡╨╜ ╤Б╨▒╤А╨╛╤Б╨░ ╨┐╨░╤А╨╛╨╗╤П.', [c9c820ef26e2]
+          тЬЧ \resources\lang\ru\passwords.php:13 тАФ 'token' => '╨Э╨╡╨┤╨╡╨╣╤Б╤В╨▓╨╕╤В╨╡╨╗╤М╨╜╤Л╨╣ ╤В╨╛╨║╨╡╨╜ ╤Б╨▒╤А╨╛╤Б╨░ ╨┐╨░╤А╨╛╨╗╤П.', [8ff7a0e0588e]
+
+    PASS  SQL Injection Risks
+        No obvious SQL injection risks detected.
+
+    PASS  Mass Assignment Vulnerabilities
+        No mass assignment issues detected.
+
+    WARN  XSS (Cross-Site Scripting) Risks
+        6 potential XSS risk(s) found.
+          тЪС \resources\views\pdf\lesson.blade.php:113 тАФ Unescaped output: {!! $content ?? $lesson->content !!} [059b24afa97e]
+          тЪС \resources\views\vendor\mail\html\layout.blade.php:26 тАФ Unescaped output: {!! $head ?? '' !!} [a1ab3ad21cc9]
+          тЪС \resources\views\vendor\mail\html\layout.blade.php:34 тАФ Unescaped output: {!! $header ?? '' !!} [ef9aefe35fd1]
+          тЪС \resources\views\vendor\mail\html\layout.blade.php:45 тАФ Unescaped output: {!! $subcopy ?? '' !!} [1a6a37d3ca6e]
+          тЪС \resources\views\vendor\mail\html\layout.blade.php:52 тАФ Unescaped output: {!! $footer ?? '' !!} [52dfb0e29704]
+          тЪС \resources\views\vendor\mail\html\message.blade.php:16 тАФ Unescaped output: {!! $subcopy !!} [fb2604e02ad9]
+
+    PASS  CSRF Protection
+        CSRF protection appears to be in place.
+
+    PASS  Open Redirect Risks
+        No obvious open redirect risks detected.
+
+    FAIL  Command Injection Risks
+        2 potential command injection risk(s) found.
+          тЬЧ \_ide_helper.php:18257 тАФ public static function exec($command, $parameters = []) [99556b205597]
+          тЬЧ \_ide_helper.php:18260 тАФ return $instance->exec($command, $parameters); [0e2944e78fe9]
+
+    PASS  Insecure Deserialization
+        No insecure deserialization patterns detected.
+
+    WARN  Debug Functions in Production Code
+        8 debug function call(s) found outside of tests.
+          тЪС \_ide_helper.php:16232 тАФ public static function dump($keys = []) [1cc568b8ac2b]
+          тЪС \_ide_helper.php:16235 тАФ return $instance->dump($keys); [a9526e95c2c4]
+          тЪС \_ide_helper.php:16245 тАФ public static function dd(...$args) [24555913456a]
+          тЪС \_ide_helper.php:16248 тАФ return $instance->dd(...$args); [bd6cdfdf571d]
+          тЪС \_ide_helper.php:33121 тАФ public static function dump(...$args) [0efa4d18c38a]
+          тЪС \_ide_helper.php:33124 тАФ return $instance->dump(...$args); [26fc7c5be900]
+          тЪС \_ide_helper.php:33145 тАФ public static function dd() [fab0220265bb]
+          тЪС \_ide_helper.php:33148 тАФ return $instance->dd(); [e3ff6306251b]
+
+    PASS  Sensitive Data Exposure
+        No obvious sensitive data exposure issues found.
+
+    PASS  SSRF Risks
+        No obvious SSRF risks detected.
+
+    PASS  TLS Certificate Verification
+        No disabled TLS verification detected.
+
+    WARN  CORS Configuration
+        2 CORS issue(s) found.
+          тЪС config/cors.php: allowed_headers '*' combined with supports_credentials => true тАФ allows arbitrary headers on credentialed requests. [436be417207f]
+          тЪС config/cors.php: allowed_methods is '*' тАФ explicitly list only the methods you intend to expose. [18dbdb6d60a4]
+
+    PASS  Package Freshness (Supply Chain)
+        All Composer packages are older than 3 day(s).
+
+    WARN  Suspicious Vendor Autoload
+        36 vendor package(s) register code via `autoload.files` outside the known-safe whitelist тАФ inspect the referenced files before trusting them, then add the package to `suspicious_autoload.whitelist` in config/checkpoint.php if intentional.
+          тЪС aws/aws-sdk-php тАФ autoload.files: src/functions.php [5ccf732179e3]
+          тЪС blade-ui-kit/blade-icons тАФ autoload.files: src/helpers.php [4fab1a8a71e9]
+          тЪС danharrin/date-format-converter тАФ autoload.files: src/helpers.php, src/standards.php [942d3a3635de]
+          тЪС evenement/evenement тАФ autoload.files: tests/functions.php [91806e79a08b]
+          тЪС ezyang/htmlpurifier тАФ autoload.files: library/HTMLPurifier.composer.php [4cea312c6487]
+          тЪС filament/filament тАФ autoload.files: src/global_helpers.php, src/helpers.php [6ded3bebbb36]
+          тЪС filament/forms тАФ autoload.files: src/helpers.php [2cd1143e41f2]
+          тЪС filament/notifications тАФ autoload.files: src/Testing/helpers.php [bd136ad33844]
+          тЪС filament/support тАФ autoload.files: src/helpers.php [bd8d374cfd1f]
+          тЪС laravel/prompts тАФ autoload.files: src/helpers.php [dc64aadecdb1]
+          тЪС league/csv тАФ autoload.files: src/functions_include.php [f0428dd3efb4]
+          тЪС livewire/livewire тАФ autoload.files: src/helpers.php [85f695bd76f2]
+          тЪС mews/purifier тАФ autoload.files: src/helpers.php [9694e9169220]
+          тЪС mockery/mockery тАФ autoload.files: library/helpers.php, library/Mockery.php, fixtures/autoload.php, тАж [1dcf45e59cc6]
+          тЪС mtdowling/jmespath.php тАФ autoload.files: src/JmesPath.php [8d03ea2755b8]
+          тЪС myclabs/deep-copy тАФ autoload.files: src/DeepCopy/deep_copy.php [77b951747ccf]
+          тЪС nunomaduro/collision тАФ autoload.files: ./src/Adapters/Phpunit/Autoload.php [84b6a9a16a53]
+          тЪС nunomaduro/termwind тАФ autoload.files: src/Functions.php [7c1663f85d9d]
+          тЪС phpunit/phpunit тАФ autoload.files: src/Framework/Assert/Functions.php, tests/_files/deprecation-trigger/trigger_deprecation.php, tests/unit/Event/AbstractEventTestCase.php, тАж [47d2b10663f6]
+          тЪС pragmarx/google2fa тАФ autoload.files: tests/helpers.php [f253f382f86b]
+          тЪС psy/psysh тАФ autoload.files: src/functions.php [dba989137eb5]
+          тЪС ralouphie/getallheaders тАФ autoload.files: src/getallheaders.php [159349645d90]
+          тЪС react/promise тАФ autoload.files: src/functions_include.php, tests/Fiber.php [460ede951716]
+          тЪС react/promise-timer тАФ autoload.files: src/functions_include.php [0c8e506dd802]
+          тЪС sabberworm/php-css-parser тАФ autoload.files: src/Rule/Rule.php, src/RuleSet/RuleContainer.php [fc0e569fd824]
+          тЪС scrivo/highlight.php тАФ autoload.files: HighlightUtilities/functions.php [271a27400e43]
+          тЪС sebastian/code-unit тАФ autoload.files: tests/_fixture/file_with_multiple_code_units.php, tests/_fixture/function.php, tests/_fixture/issue_9.php [85cce6cd7567]
+          тЪС sebastian/global-state тАФ autoload.files: tests/_fixture/SnapshotFunctions.php [13aee9384c69]
+          тЪС sebastian/type тАФ autoload.files: tests/_fixture/callback_function.php, tests/_fixture/functions_that_declare_return_types.php [9fa3997c4c20]
+          тЪС spatie/invade тАФ autoload.files: src/functions.php [8b0bcb23361d]
+          тЪС spatie/laravel-permission тАФ autoload.files: src/helpers.php [8fb30d5ebb1a]
+          тЪС symfony/clock тАФ autoload.files: Resources/now.php [2421ac5dea18]
+          тЪС symfony/string тАФ autoload.files: Resources/functions.php [db625b40c9f2]
+          тЪС symfony/translation тАФ autoload.files: Resources/functions.php [2fc080fcd68d]
+          тЪС symfony/var-dumper тАФ autoload.files: Resources/functions/dump.php [ecf22213e748]
+          тЪС thecodingmachine/safe тАФ autoload.files: lib/special_cases.php, generated/apache.php, generated/apcu.php, тАж [5c8cd9019fa2]
+
+    WARN  Supply Chain Tooling
+        No npm supply-chain protection tool detected on PATH.
+          тЪС Install Safe-Chain (free, by Aikido) to intercept known-malicious npm packages before they execute: [11237ebcced3]
+          тЪС   npm install -g @aikidosec/safe-chain [ef474f32494e]
+          тЪС   safe-chain setup [2e20e774eab1]
+          тЪС Alternative: Socket CLI (npm install -g socket). [32cc17ad5d23]
+
+    PASS  Path Traversal Risks
+        No obvious path traversal risks detected.
+
+    PASS  Weak Cryptography
+        No obvious weak-cryptography patterns detected.
+
+    PASS  Insecure RNG
+        No insecure RNG usage detected in security contexts.
+
+    PASS  Session & Cookie Security
+        Session/cookie configuration looks reasonable.
+
+    PASS  EOL Versions
+        PHP and Laravel versions are within their security-supported window.
+
+  тФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФАтФА
+  Summary  15 passed  9 warning(s)  2 failed  (26 checks total)
+
+  Scan result: FAIL тАФ fix the issues above before deploying.
+
