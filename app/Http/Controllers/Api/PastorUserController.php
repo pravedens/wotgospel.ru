@@ -137,7 +137,7 @@ class PastorUserController extends Controller
                 'city' => $user->city,
                 'church_name' => $user->church_name,
                 'about' => $user->about,
-                'birth_date' => $user->birth_date,
+                'birth_date' => $user->birth_date?->format('Y-m-d'),
                 'roles' => $user->getRoleNames()->toArray(),
                 'is_member' => $user->hasRole('member'),
                 'is_minister' => $user->hasRole('minister'),

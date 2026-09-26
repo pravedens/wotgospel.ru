@@ -38,7 +38,7 @@ class BibleEnrollmentRequest extends Model
 
     protected $casts = [
         'reviewed_at' => 'datetime',
-        'birth_date' => 'date',
+        'birth_date' => 'date:Y-m-d',
         // ✅ Санитизация HTML (пользовательский ввод)
         'about' => CleanHtmlInput::class,
         'bible_courses_experience' => CleanHtmlInput::class,

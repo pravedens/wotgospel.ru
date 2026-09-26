@@ -300,7 +300,7 @@ class AuthController extends Controller
             'city' => $user->city,
             'church_name' => $user->church_name,
             'about' => $user->about,
-            'birth_date' => $user->birth_date,
+            'birth_date' => $user->birth_date?->format('Y-m-d'),
             'avatar' => $user->avatar,
             'created_at' => $user->created_at,
             'marital_status' => $user->marital_status,
