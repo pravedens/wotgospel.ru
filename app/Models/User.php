@@ -101,7 +101,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'notify_certificate_issued_email' => 'boolean',   // ✅ Добавлен тип
             'notify_certificate_issued_webpush' => 'boolean', // ✅ Добавлен тип
             // ✅ Санитизация HTML (поля анкеты)
-            'about' => CleanHtmlInput::class,
+            'about' => \App\Casts\StripHtml::class,
             'ministry' => \App\Casts\StripHtml::class,
             'bible_courses_experience' => \App\Casts\StripHtml::class,
             'learning_expectations' => \App\Casts\StripHtml::class,
