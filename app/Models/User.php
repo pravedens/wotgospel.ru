@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\StripHtml;
 use App\Notifications\CustomVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -12,7 +13,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
-use Mews\Purifier\Casts\CleanHtmlInput;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -101,10 +101,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'notify_certificate_issued_email' => 'boolean',   // ✅ Добавлен тип
             'notify_certificate_issued_webpush' => 'boolean', // ✅ Добавлен тип
             // ✅ Санитизация HTML (поля анкеты)
-            'about' => \App\Casts\StripHtml::class,
-            'ministry' => \App\Casts\StripHtml::class,
-            'bible_courses_experience' => \App\Casts\StripHtml::class,
-            'learning_expectations' => \App\Casts\StripHtml::class,
+            'about' => StripHtml::class,
+            'ministry' => StripHtml::class,
+            'bible_courses_experience' => StripHtml::class,
+            'learning_expectations' => StripHtml::class,
         ];
     }
 

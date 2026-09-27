@@ -97,16 +97,42 @@ class AuthController extends Controller
             error_log('Name: '.$request->name);
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
+                'name' => [
+                    'required',
+                    'string',
+                    'min:2',
+                    'max:50',
+                    'regex:/^[\p{Cyrillic}\p{Latin}][\p{Cyrillic}\p{Latin}\s\-]*$/u',
+                ],
+                'email' => [
+                    'required',
+                    'string',
+                    'email:rfc',
+                    'max:255',
+                    'regex:/^[^@]+@(mail\.ru|gmail\.com|yandex\.ru)$/i',
+                ],
                 'password' => 'required|string|min:8|confirmed',
                 'privacy_accepted' => 'required|accepted',
                 'registration_source' => 'nullable|string|max:255',
+            ], [
+                'name.required' => 'Пожалуйста, укажите имя',
+                'name.min' => 'Имя должно быть не менее 2 символов',
+                'name.max' => 'Имя должно быть не более 50 символов',
+                'name.regex' => 'Имя может содержать только буквы, пробел и дефис',
+
+                'email.required' => 'Пожалуйста, укажите email',
+                'email.email' => 'Введите корректный email',
+                'email.regex' => 'Разрешены только почты mail.ru, gmail.com и yandex.ru',
+
+                'password.required' => 'Пожалуйста, укажите пароль',
+                'password.min' => 'Пароль должен быть не менее 8 символов',
+                'password.confirmed' => 'Пароли не совпадают',
+
+                'privacy_accepted.required' => 'Необходимо согласие на обработку персональных данных',
+                'privacy_accepted.accepted' => 'Необходимо согласие на обработку персональных данных',
             ]);
 
             if ($validator->fails()) {
-                error_log('Validation failed: '.json_encode($validator->errors()->toArray()));
-
                 return response()->json([
                     'success' => false,
                     'message' => 'Ошибка валидации',
