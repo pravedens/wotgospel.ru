@@ -10,84 +10,66 @@ use Intervention\Image\ImageManager;
 
 class ImageOptimizer
 {
-    /**
-     * Оптимизация для карусели
-     * Целевой размер: 1200x800 (с обрезкой), WebP качество 85
-     */
+    /** Карусель / детальные страницы: 896×672 = 2× от 448×336 */
     public static function optimizeForCarousel(UploadedFile $file): ?string
     {
-        return self::optimizeAndStore($file, 'events/thumbnails', 1200, 800, 85);
+        return self::optimizeAndStore($file, 'events/thumbnails', 896, 672, 82);
     }
 
-    /**
-     * Оптимизация для списка событий
-     * Целевой размер: 600x400, WebP качество 80
-     */
+    /** Списки / карточки: 800×600 = 2× от 400×300 */
     public static function optimizeForList(UploadedFile $file): ?string
     {
-        return self::optimizeAndStore($file, 'events/thumbnails', 600, 400, 80);
+        return self::optimizeAndStore($file, 'posts/thumbnails', 800, 600, 82);
     }
 
-    /**
-     * Универсальный метод оптимизации
-     */
+    /** Логотипы друзей: 240×240 = 2× от 120×120 */
+    public static function optimizeForFriends(UploadedFile $file): ?string
+    {
+        return self::optimizeAndStore($file, 'friends', 240, 240, 85);
+    }
+
     public static function optimizeAndStore(
         UploadedFile $file,
         string $directory,
         int $width = 1200,
         int $height = 800,
-        int $quality = 85
+        int $quality = 85,
     ): ?string {
         try {
-            // Создаём менеджер с драйвером Imagick
             $manager = new ImageManager(new Driver);
-
-            // Читаем изображение
             $image = $manager->read($file->getPathname());
 
-            // Получаем оригинальные размеры
             $originalWidth = $image->width();
             $originalHeight = $image->height();
 
-            // ========== 1. МАСШТАБИРОВАНИЕ С ОБРЕЗКОЙ ==========
-            if ($originalWidth <= $width && $originalHeight <= $height) {
-                // Если изображение меньше целевого размера — не увеличиваем
-                $image->scale(width: $originalWidth);
-            } else {
-                // Масштабируем с сохранением пропорций и обрезаем до точного размера
+            // Не увеличиваем маленькие изображения
+            if ($originalWidth > $width || $originalHeight > $height) {
                 $ratio = $originalWidth / $originalHeight;
                 $targetRatio = $width / $height;
 
                 if ($ratio > $targetRatio) {
-                    // Слишком широкое — масштабируем по ширине
                     $image->scale(width: $width);
-                    // Обрезаем лишнее по высоте
-                    $image->crop(width: $width, height: $height);
                 } else {
-                    // Слишком высокое — масштабируем по высоте
                     $image->scale(height: $height);
-                    // Обрезаем лишнее по ширине
-                    $image->crop(width: $width, height: $height);
                 }
+
+                $image->crop(width: $width, height: $height);
             }
 
-            // ========== 2. КОНВЕРТАЦИЯ В WEBP ==========
             $encodedImage = $image->toWebp(quality: $quality);
 
-            // ========== 3. ГЕНЕРАЦИЯ УНИКАЛЬНОГО ИМЕНИ ==========
             $filename = Str::random(40).'.webp';
             $fullPath = $directory.'/'.$filename;
 
-            // ========== 4. СОХРАНЕНИЕ В S3 (Яндекс Облако) ==========
             Storage::disk('s3')->put($fullPath, (string) $encodedImage, [
                 'visibility' => 'public',
                 'ContentType' => 'image/webp',
+                'CacheControl' => 'public, max-age=31536000, immutable',
             ]);
 
             \Log::info('Image optimized and stored', [
                 'original_size' => $file->getSize(),
-                'original_width' => $originalWidth,
-                'original_height' => $originalHeight,
+                'original_dimensions' => "{$originalWidth}×{$originalHeight}",
                 'final_path' => $fullPath,
                 'final_size' => strlen((string) $encodedImage),
             ]);
