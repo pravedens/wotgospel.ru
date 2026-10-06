@@ -70,6 +70,8 @@ class EventObserver
             $event->saveQuietly();
             $this->sendNotificationIfNeeded($event, 'published', $notificationService);
         }
+
+        $this->optimizeThumbnail($event);
     }
 
     /**
@@ -79,6 +81,8 @@ class EventObserver
     {
         $notificationService = app(NotificationService::class);
         $this->sendNotificationIfNeeded($event, 'created', $notificationService);
+
+        $this->optimizeThumbnail($event);
     }
 
     /**
@@ -101,4 +105,62 @@ class EventObserver
             Log::error('Failed to send notifications: '.$e->getMessage());
         }
     }
+
+    public function deleting(Event $event): void
+{
+    if ($event->thumbnail && ! str_starts_with($event->thumbnail, 'http')) {
+        \Storage::disk('s3')->delete($event->thumbnail);
+    }
+}
+
+private function optimizeThumbnail(Event $event): void
+{
+    $original = $event->getOriginal('thumbnail');
+    $current = $event->thumbnail;
+
+    if (! $current || $original === $current) {
+        return;
+    }
+
+    if (str_ends_with($current, '.webp')) {
+        return;
+    }
+
+    try {
+        $contents = \Storage::disk('s3')->get($current);
+        if (! $contents) {
+            return;
+        }
+
+        $manager = new \Intervention\Image\ImageManager(
+            new \Intervention\Image\Drivers\Imagick\Driver
+        );
+        $image = $manager->read($contents);
+
+        $image->scaleDown(width: 896, height: 672);
+        $encoded = $image->toWebp(quality: 82);
+
+        $newPath = 'events/thumbnails/'.pathinfo($current, PATHINFO_FILENAME).'.webp';
+
+        \Storage::disk('s3')->put($newPath, (string) $encoded, [
+            'visibility' => 'public',
+            'ContentType' => 'image/webp',
+            'CacheControl' => 'public, max-age=31536000, immutable',
+        ]);
+
+        if ($current !== $newPath) {
+            \Storage::disk('s3')->delete($current);
+        }
+
+        $event->timestamps = false;
+        $event->forceFill(['thumbnail' => $newPath])->saveQuietly();
+        $event->timestamps = true;
+
+    } catch (\Exception $e) {
+        \Log::error('Event thumbnail optimization failed', [
+            'event_id' => $event->id,
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
 }

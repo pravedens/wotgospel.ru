@@ -3,6 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PostResource\Pages;
+use App\Services\ImageOptimizer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use App\Models\Post;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -96,7 +99,26 @@ class PostResource extends Resource
                 ->columnSpanFull(),
 
             // Медиафайлы
-            FileUpload::make('thumbnail')->label('Изображение')->image()->directory('posts/thumbnails')->disk('s3'),
+            FileUpload::make('thumbnail')
+    ->label('Изображение')
+    ->image()
+    ->directory('posts/thumbnails')
+    ->disk('s3')
+    ->visibility('public')
+    ->imageEditor()
+    ->maxSize(5120)
+    ->saveUploadedFileUsing(function (UploadedFile $file, ?Model $record): string {
+        $optimizedPath = ImageOptimizer::optimizeForList($file);
+
+        if ($optimizedPath) {
+            if ($record && $record->thumbnail) {
+                Storage::disk('s3')->delete($record->thumbnail);
+            }
+            return $optimizedPath;
+        }
+
+        return $file->store('posts/thumbnails', 's3');
+    }),
             FileUpload::make('audio_file')->label('Аудио файл')->directory('posts/audio')->disk('s3')->maxSize(204800)->acceptedFileTypes(['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a']),
             FileUpload::make('text_file')->label('Текстовый файл')->directory('posts/text')->disk('s3'),
 
@@ -124,17 +146,7 @@ class PostResource extends Resource
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->action(function (Collection $records) {
-                            foreach ($records as $record) {
-                                if ($record->thumbnail) {
-                                    Storage::disk('s3')->delete($record->thumbnail);
-                                }
-                                $record->delete();
-                            }
-                            Notification::make()->title('Записи удалены')->success()->send();
-                        })
-                        ->requiresConfirmation(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ]);
     }

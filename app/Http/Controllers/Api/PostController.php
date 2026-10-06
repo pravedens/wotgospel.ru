@@ -20,32 +20,27 @@ class PostController extends Controller
      * Получение списка постов с фильтрацией и пагинацией
      */
     public function index(Request $request)
-    {
-        // ✅ Кешируем список постов на 5 минут
-        $cacheKey = 'posts_list_'.md5(json_encode($request->all()));
+{
+    $validator = Validator::make($request->all(), [
+        'category_id' => 'nullable|exists:categories,id',
+        'group_id' => 'nullable|exists:groups,id',
+        'conference_id' => 'nullable|exists:conferences,id',
+        'per_page' => 'nullable|integer|min:1|max:50',
+        'page' => 'nullable|integer|min:1',
+    ]);
 
-        $cachedData = Cache::get($cacheKey);
-        if ($cachedData) {
-            return response()->json($cachedData);
-        }
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Ошибка валидации параметров',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
-        // Валидация параметров запроса
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'nullable|exists:categories,id',
-            'group_id' => 'nullable|exists:groups,id',
-            'conference_id' => 'nullable|exists:conferences,id',
-            'per_page' => 'nullable|integer|min:1|max:500',
-            'page' => 'nullable|integer|min:1',
-        ]);
+    $cacheKey = 'posts_list_'.md5(json_encode($request->only([
+        'category_id', 'group_id', 'conference_id', 'per_page', 'page', 'search',
+    ])));
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Ошибка валидации параметров',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        // Базовый запрос с загрузкой связанных данных
+    $posts = Cache::remember($cacheKey, 300, function () use ($request) {
         $query = Post::with([
             'category:id,title,slug',
             'group:id,title,slug',
@@ -58,20 +53,15 @@ class PostController extends Controller
             )
             ->orderBy('created_at', 'desc');
 
-        // Применение фильтров
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-
         if ($request->filled('group_id')) {
             $query->where('group_id', $request->group_id);
         }
-
         if ($request->filled('conference_id')) {
             $query->where('conference_id', $request->conference_id);
         }
-
-        // Поиск по заголовку и описанию
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -81,44 +71,33 @@ class PostController extends Controller
             });
         }
 
-        // Пагинация (по умолчанию 8 записей на странице)
-        $perPage = $request->get('per_page', 8);
-        $posts = $query->paginate($perPage);
+        return $query->paginate($request->get('per_page', 8));
+    });
 
-        // ✅ Оптимизируем проверку избранного
-        $user = $request->user();
+    $user = $request->user();
+    if ($user) {
+        $postIds = collect($posts->items())->pluck('id')->toArray();
+        if (! empty($postIds)) {
+            $favorites = DB::table('favorites')
+                ->where('user_id', $user->id)
+                ->whereIn('post_id', $postIds)
+                ->pluck('post_id')
+                ->toArray();
 
-        if ($user) {
-            $userId = $user->id;
-            $postIds = $posts->pluck('id')->toArray();
-
-            if (! empty($postIds)) {
-                $favorites = DB::table('favorites')
-                    ->where('user_id', $userId)
-                    ->whereIn('post_id', $postIds)
-                    ->pluck('post_id')
-                    ->toArray();
-
-                $posts->getCollection()->transform(function ($post) use ($favorites) {
-                    $post->is_favorite = in_array($post->id, $favorites);
-
-                    return $post;
-                });
-            }
-        } else {
-            $posts->getCollection()->transform(function ($post) {
-                $post->is_favorite = false;
-
+            $posts->getCollection()->transform(function ($post) use ($favorites) {
+                $post->is_favorite = in_array($post->id, $favorites);
                 return $post;
             });
         }
-
-        $data = $posts; // результат
-
-        Cache::put($cacheKey, $data, 300);
-
-        return response()->json($data);
+    } else {
+        $posts->getCollection()->transform(function ($post) {
+            $post->is_favorite = false;
+            return $post;
+        });
     }
+
+    return response()->json($posts);
+}
 
     /**
      * Получение одного поста по slug
@@ -315,44 +294,40 @@ class PostController extends Controller
      * Получение рекомендуемых (случайных) постов
      */
     public function recommended(Request $request)
-    {
-        try {
-            $limit = $request->get('limit', 4);
-            $cacheKey = 'recommended_posts_'.$limit.'_'.app()->getLocale();
+{
+    try {
+        $limit = $request->get('limit', 4);
+        $cacheKey = 'recommended_posts_'.$limit;
 
-            // Кешируем рекомендуемые посты на 10 минут (600 секунд)
-            return Cache::remember($cacheKey, 600, function () use ($limit) {
-                // Получаем случайные посты
-                $posts = Post::with(['category:id,title,slug', 'group:id,title,slug', 'conference:id,title,slug'])
-                    ->inRandomOrder()
-                    ->limit($limit)
-                    ->get();
+        $posts = Cache::remember($cacheKey, 600, function () use ($limit) {
+            return Post::with(['category:id,title,slug', 'group:id,title,slug', 'conference:id,title,slug'])
+                ->inRandomOrder()
+                ->limit($limit)
+                ->get();
+        });
 
-                // Добавляем информацию об избранном для каждого поста
-                if (Auth::check()) {
-                    $user = auth()->user();
-                    $posts->each(function ($post) use ($user) {
-                        $post->is_favorite = $user->favorites()
-                            ->where('post_id', $post->id)
-                            ->exists();
-                    });
-                } else {
-                    $posts->each(function ($post) {
-                        $post->is_favorite = false;
-                    });
-                }
+        $user = $request->user();
+        if ($user) {
+            $postIds = $posts->pluck('id')->toArray();
+            $favorites = DB::table('favorites')
+                ->where('user_id', $user->id)
+                ->whereIn('post_id', $postIds)
+                ->pluck('post_id')
+                ->toArray();
 
-                return response()->json($posts);
+            $posts->each(function ($post) use ($favorites) {
+                $post->is_favorite = in_array($post->id, $favorites);
             });
-
-        } catch (\Exception $e) {
-            Log::error('Error in recommended posts: '.$e->getMessage());
-
-            return response()->json([
-                'error' => $e->getMessage(),
-            ], 500);
+        } else {
+            $posts->each(fn ($post) => $post->is_favorite = false);
         }
+
+        return response()->json($posts);
+    } catch (\Exception $e) {
+        Log::error('Error in recommended posts: '.$e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     /**
      * Очистка кеша рекомендуемых постов

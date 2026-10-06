@@ -6,10 +6,12 @@ use App\Listeners\CheckUserAccess;
 use App\Models\About;
 use App\Models\Event;
 use App\Models\Event as EventModel;
+use App\Models\Friend;
 use App\Models\Post;
 use App\Models\User;
 use App\Observers\AboutObserver;
 use App\Observers\EventObserver;
+use App\Observers\FriendObserver;
 use App\Observers\MinisterObserver;
 use App\Observers\PostObserver;
 use App\Policies\EventPolicy;
@@ -77,6 +79,9 @@ class AppServiceProvider extends ServiceProvider
 
         // ✅ Регистрируем Observer для Post (добавляем)
         Post::observe(PostObserver::class);
+
+        // ✅ Регистрируем Observer для Friend
+        Friend::observe(FriendObserver::class);
 
         // ✅ Регистрируем Observer для About
         About::observe(AboutObserver::class);

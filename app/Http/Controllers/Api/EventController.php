@@ -467,13 +467,7 @@ class EventController extends Controller
             $thumbnailPath = null;
             if ($request->hasFile('thumbnail')) {
                 $file = $request->file('thumbnail');
-                $optimizedPath = ImageOptimizer::optimizeAndStore(
-                    file: $file,
-                    directory: 'events/thumbnails',
-                    width: 1200,
-                    height: 800,
-                    quality: 85
-                );
+                $optimizedPath = ImageOptimizer::optimizeForCarousel($file);
 
                 if ($optimizedPath) {
                     $thumbnailPath = $optimizedPath;
@@ -626,16 +620,9 @@ class EventController extends Controller
             }
 
             if ($request->hasFile('thumbnail')) {
-                $event->deleteThumbnail();
 
                 $file = $request->file('thumbnail');
-                $optimizedPath = ImageOptimizer::optimizeAndStore(
-                    file: $file,
-                    directory: 'events/thumbnails',
-                    width: 1200,
-                    height: 800,
-                    quality: 85
-                );
+                $optimizedPath = ImageOptimizer::optimizeForCarousel($file);
 
                 if ($optimizedPath) {
                     $eventData['thumbnail'] = $optimizedPath;
@@ -673,8 +660,6 @@ class EventController extends Controller
             }
 
             $event = Event::findOrFail($id);
-
-            $event->deleteThumbnail();
 
             $event->delete();
 

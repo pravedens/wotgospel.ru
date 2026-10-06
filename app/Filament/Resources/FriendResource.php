@@ -108,18 +108,20 @@ class FriendResource extends Resource
                 ->columnSpanFull(),
 
             FileUpload::make('thumbnail')
-                ->label('Логотип')
-                ->image()
-                ->directory('friends')
-                ->disk('s3')
-                ->visibility('public')
-                ->imageEditor()
-                ->imageResizeMode('cover')
-                ->imageResizeTargetWidth('200')
-                ->imageResizeTargetHeight('200')
-                ->maxSize(1024)
-                ->helperText('Рекомендуемый размер: 200x200px')
-                ->columnSpanFull(),
+    ->label('Логотип')
+    ->image()
+    ->directory('friends')
+    ->disk('s3')
+    ->visibility('public')
+    ->imageEditor()
+    ->imageResizeMode('cover')
+    ->imageResizeTargetWidth('240')
+    ->imageResizeTargetHeight('240')
+    ->imageResizeUpscale(false)
+    ->acceptedFileTypes(['image/webp', 'image/png', 'image/jpeg', 'image/svg+xml'])
+    ->maxSize(2048)
+    ->helperText('Рекомендуемый размер: 240×240px (WebP, PNG или SVG)')
+    ->columnSpanFull(),
 
             TextInput::make('sort_order')
                 ->label('Порядок сортировки')
@@ -187,41 +189,15 @@ class FriendResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make()
-                    ->action(function (Friend $record) {
-                        if ($record->thumbnail) {
-                            Storage::disk('s3')->delete($record->thumbnail);
-                            \Log::info('Friend thumbnail deleted', ['path' => $record->thumbnail]);
-                        }
-                        $record->delete();
-
-                        Notification::make()
-                            ->title('Запись удалена')
-                            ->success()
-                            ->send();
-                    }),
+                DeleteAction::make(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->action(function (Collection $records) {
-                            foreach ($records as $record) {
-                                if ($record->thumbnail) {
-                                    Storage::disk('s3')->delete($record->thumbnail);
-                                }
-                                $record->delete();
-                            }
-
-                            Notification::make()
-                                ->title('Записи удалены')
-                                ->success()
-                                ->send();
-                        })
-                        ->requiresConfirmation()
-                        ->deselectRecordsAfterCompletion(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ]);
     }
+
 
     /* ===================== RELATIONS & PAGES ===================== */
 

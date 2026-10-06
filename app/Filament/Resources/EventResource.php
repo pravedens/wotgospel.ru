@@ -53,28 +53,35 @@ class EventResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $total = static::getModel()::count();
-        $inCarousel = static::getModel()::where('show_in_carousel', true)->count();
-        $limit = config('app.carousel.events_limit', 5);
-
-        return "{$inCarousel}/{$limit} в карусели";
+        $data = static::getBadgeData();
+    return "{$data['inCarousel']}/{$data['limit']} в карусели";
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $inCarousel = static::getModel()::where('show_in_carousel', true)->count();
-        $limit = config('app.carousel.events_limit', 5);
+        $data = static::getBadgeData();
 
-        if ($inCarousel >= $limit) {
-            return 'danger';
-        }
-
-        if ($inCarousel >= $limit * 0.7) {
-            return 'warning';
-        }
-
-        return 'success';
+    if ($data['inCarousel'] >= $data['limit']) {
+        return 'danger';
     }
+    if ($data['inCarousel'] >= $data['limit'] * 0.7) {
+        return 'warning';
+    }
+    return 'success';
+    }
+
+    private static function getBadgeData(): array
+{
+    static $cache = null;
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    $inCarousel = static::getModel()::where('show_in_carousel', true)->count();
+    $limit = config('app.carousel.events_limit', 5);
+
+    return $cache = compact('inCarousel', 'limit');
+}
 
     /* ===================== FORM (Filament 4) ===================== */
 
@@ -126,25 +133,13 @@ class EventResource extends Resource
                 ->columnSpanFull(),
 
             RichEditor::make('content')
-                ->label('Подробно')
-                ->toolbarButtons([
-                    'bold',
-                    'italic',
-                    'underline',
-                    'strike',
-                    'link',
-                    'attachFiles',  // ← позволяет загружать картинки
-                    'blockquote',
-                    'bulletList',
-                    'orderedList',
-                ])
-                ->fileAttachmentsDisk('s3')           // ← хранить на S3
-                ->fileAttachmentsDirectory('events/content')  // ← папка для картинок
-                ->fileAttachmentsVisibility('public')
-                ->extraAttributes([
-                    'style' => 'min-height: 400px;',
-                ])
-                ->columnSpanFull(),
+    ->label('Подробно')
+    ->toolbarButtons([
+        'bold', 'italic', 'underline', 'strike', 'link',
+        'blockquote', 'bulletList', 'orderedList',
+    ])
+    ->extraAttributes(['style' => 'min-height: 400px;'])
+    ->columnSpanFull(),
 
             FileUpload::make('thumbnail')
                 ->label('Картинка')
@@ -155,13 +150,7 @@ class EventResource extends Resource
                 ->imageEditor()
                 ->maxSize(5120)
                 ->saveUploadedFileUsing(function (UploadedFile $file, ?Model $record): string {
-                    $optimizedPath = ImageOptimizer::optimizeAndStore(
-                        file: $file,
-                        directory: 'events/thumbnails',
-                        width: 1200,
-                        height: 800,
-                        quality: 85
-                    );
+                    $optimizedPath = ImageOptimizer::optimizeForCarousel($file);
 
                     if ($optimizedPath) {
                         if ($record && $record->thumbnail) {
@@ -374,37 +363,11 @@ class EventResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make()
-                    ->action(function (Event $record) {
-                        if ($record->thumbnail) {
-                            Storage::disk('s3')->delete($record->thumbnail);
-                        }
-                        $record->delete();
-
-                        Notification::make()
-                            ->title('Событие удалено')
-                            ->success()
-                            ->send();
-                    }),
+                DeleteAction::make(),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->action(function (Collection $records) {
-                            foreach ($records as $record) {
-                                if ($record->thumbnail) {
-                                    Storage::disk('s3')->delete($record->thumbnail);
-                                }
-                                $record->delete();
-                            }
-
-                            Notification::make()
-                                ->title('Записи удалены')
-                                ->success()
-                                ->send();
-                        })
-                        ->requiresConfirmation()
-                        ->deselectRecordsAfterCompletion(),
+                    DeleteBulkAction::make()->requiresConfirmation(),
                 ]),
             ]);
     }
